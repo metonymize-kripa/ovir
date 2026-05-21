@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>OVIR.net — Opportunistic Verifiable Inference Runtime Network</title>
   <meta name="description"
-    content="OVIR.net is an Opportunistic Verifiable Inference Runtime Network: a decentralized runtime for fragmenting short-query / shared-long-context workloads across workers, caches, fallbacks, and verifiers." />
+    content="OVIR.net is a runtime network for fragmenting short-query / shared-long-context inference workloads across distributed workers, caches, fallback paths, and verifiers." />
   <meta property="og:title" content="OVIR.net — Opportunistic Verifiable Inference Runtime Network" />
   <meta property="og:description"
-    content="A networked runtime for distributed short-query / long-context inference, cached fallbacks, and verifiable execution receipts." />
+    content="Networked inference for repeated short-query / long-context workloads with cached fallbacks and verifiable receipts." />
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#0d0f12" />
   <style>
@@ -82,7 +82,7 @@
 
     .hero {
       display: grid;
-      grid-template-columns: 1.38fr 0.62fr;
+      grid-template-columns: 1.4fr 0.6fr;
       gap: 44px;
       align-items: end;
       padding: 76px 0 56px;
@@ -179,7 +179,6 @@
     }
 
     .grid { display: grid; gap: 14px; }
-    .grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
     .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
     .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
     .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
@@ -219,24 +218,6 @@
       margin-top: 16px;
       overflow-x: auto;
     }
-
-    .matrix {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .matrix-cell {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-      background: rgba(255, 254, 250, 0.62);
-      min-height: 116px;
-    }
-
-    .matrix-cell b { display: block; margin-bottom: 8px; letter-spacing: -0.02em; }
-    .matrix-cell span { color: var(--muted); font-size: 14px; }
 
     .example {
       border: 1px solid var(--line);
@@ -307,12 +288,8 @@
       border-top: 1px solid var(--line);
     }
 
-    @media (max-width: 1120px) {
-      .grid.cols-5 { grid-template-columns: repeat(3, 1fr); }
-    }
-
     @media (max-width: 1040px) {
-      .grid.cols-4, .matrix { grid-template-columns: repeat(2, 1fr); }
+      .grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 880px) {
@@ -320,7 +297,7 @@
       nav { justify-content: flex-start; }
       .hero { grid-template-columns: 1fr; padding-top: 50px; }
       .section-head { grid-template-columns: 1fr; gap: 12px; }
-      .grid.cols-5, .grid.cols-4, .grid.cols-3, .grid.cols-2, .refs, .matrix { grid-template-columns: 1fr; }
+      .grid.cols-4, .grid.cols-3, .grid.cols-2, .refs { grid-template-columns: 1fr; }
       .step { grid-template-columns: 48px 1fr; align-items: start; }
       .step small { grid-column: 2; text-align: left; }
     }
@@ -335,9 +312,8 @@
         <span>OVIR.net</span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="#fit">Workload fit</a>
+        <a href="#fit">Fit</a>
         <a href="#network">Network</a>
-        <a href="#how-it-works">How it works</a>
         <a href="#fallbacks">Fallbacks</a>
         <a href="#stack">Stack</a>
         <a href="#references">References</a>
@@ -349,155 +325,105 @@
       <section class="hero" aria-labelledby="hero-title">
         <div>
           <p class="eyebrow">Opportunistic Verifiable Inference Runtime Network</p>
-          <h1 id="hero-title">Fragment inference across a verifiable network.</h1>
-          <p class="lede">OVIR.net is a networked runtime for one narrow but valuable pattern: many short queries repeatedly executed against the same long context. Workloads are fragmented into content-addressed units, routed to distributed workers and caches, escalated when needed, and returned with verifiable receipts.</p>
+          <h1 id="hero-title">A network for repeat long-context inference.</h1>
+          <p class="lede">OVIR.net fragments one workload pattern: many short queries repeatedly executed against the same long context. The network places those fragments near the right context, cache, model, or fallback answer, then returns receipts for what ran and what was reused.</p>
           <div class="actions" aria-label="Project links">
             <a class="button primary" href="https://github.com/metonymize-kripa/ovir">View GitHub Repo</a>
-            <a class="button secondary" href="#network">See the network model</a>
+            <a class="button secondary" href="#fit">Check the fit</a>
           </div>
         </div>
         <aside class="panel" aria-label="Project summary">
           <div class="metric">
-            <div class="metric-row"><span class="metric-label">Name</span><span class="metric-value">OVIR.net</span></div>
-            <div class="metric-row"><span class="metric-label">Meaning</span><span class="metric-value">Inference Runtime Network</span></div>
-            <div class="metric-row"><span class="metric-label">Work unit</span><span class="metric-value">Hash-addressed fragment</span></div>
-            <div class="metric-row"><span class="metric-label">Trust primitive</span><span class="metric-value">Receipt + recompute</span></div>
+            <div class="metric-row"><span class="metric-label">Scope</span><span class="metric-value">Short query / shared context</span></div>
+            <div class="metric-row"><span class="metric-label">Unit</span><span class="metric-value">Content-addressed fragment</span></div>
+            <div class="metric-row"><span class="metric-label">Advantage</span><span class="metric-value">Reuse + locality</span></div>
+            <div class="metric-row"><span class="metric-label">Trust</span><span class="metric-value">Receipts + recompute</span></div>
           </div>
         </aside>
       </section>
 
       <section id="fit" aria-labelledby="fit-title">
         <div class="section-head">
-          <h2 id="fit-title">The workload has to fit</h2>
-          <p class="section-copy">OVIR.net is not a general transformer replacement. It is an optimization for workloads where a large shared context is queried many times, the query is short, useful evidence is local or sparse, and the system can escalate when the shortcut is uncertain.</p>
+          <h2 id="fit-title">The fit is narrow</h2>
+          <p class="section-copy">OVIR.net should only be used where a stable long context is queried many times. It is not a general transformer replacement and not a shortcut for one-off dense reasoning.</p>
         </div>
         <div class="grid cols-3">
           <article class="card tall">
             <span class="kicker">Good fit</span>
-            <h3>Many questions over one corpus</h3>
-            <p>Legal discovery, contract review, enterprise knowledge bases, support archives, code search, clinical literature, compliance manuals, and due-diligence data rooms.</p>
-            <div class="formula">pattern = Q_short × C_long<br />same C queried repeatedly<br />network caches amortize work</div>
+            <h3>Repeated questions over one corpus</h3>
+            <p>Legal discovery, contract review, due-diligence data rooms, support archives, code search, compliance manuals, clinical literature, and enterprise knowledge bases.</p>
+            <div class="formula">many Q_short × same C_long<br />stable chunks<br />reuse compounds</div>
           </article>
           <article class="card tall">
             <span class="kicker">Bad fit</span>
-            <h3>One-off dense reasoning</h3>
-            <p>Single-use prompts, creative generation, tasks where every token can depend on every other token, or cases where the long context changes faster than the cache can amortize.</p>
-            <div class="formula">pattern = unique Q × unique C<br />little reuse<br />fallback likely dominates</div>
+            <h3>Unique prompt, unique context</h3>
+            <p>Creative generation, one-off analysis, fast-changing context, or tasks where most tokens plausibly depend on most other tokens.</p>
+            <div class="formula">unique Q × unique C<br />little amortization<br />use full model path</div>
           </article>
           <article class="card tall">
-            <span class="kicker">Borderline</span>
-            <h3>Hybrid routing required</h3>
-            <p>Some queries are easy and local; others require full global attention. OVIR.net acts as a triage network, not a forced approximation layer.</p>
-            <div class="formula">cheap path when confident<br />heavy path when uncertain<br />cache both outcomes</div>
+            <span class="kicker">Design rule</span>
+            <h3>Shortcut only when confidence is high</h3>
+            <p>The network is a triage layer. It accepts local/sparse evidence when strong and routes uncertain cases to a heavier model.</p>
+            <div class="formula">cheap path = confident<br />fallback = uncertain<br />cache both</div>
           </article>
-        </div>
-        <div class="matrix" aria-label="Workload pattern examples">
-          <div class="matrix-cell"><b>Input shape</b><span>One short query against thousands to millions of reusable long-context chunks.</span></div>
-          <div class="matrix-cell"><b>Query shape</b><span>Search, lookup, relevance, extraction, citation, classification, or reranking request.</span></div>
-          <div class="matrix-cell"><b>Context shape</b><span>Stable or slowly changing corpus where chunk embeddings, summaries, and fallback answers remain valid.</span></div>
-          <div class="matrix-cell"><b>Network shape</b><span>Many future requests can reuse the same chunk work, worker locality, or fallback decision.</span></div>
         </div>
       </section>
 
       <section id="network" aria-labelledby="network-title">
         <div class="section-head">
           <h2 id="network-title">The network is the runtime</h2>
-          <p class="section-copy">The key shift is that inference is no longer a single server call. A workload becomes a verifiable graph of fragments that can be placed across a decentralized network of workers, caches, fallback executors, and verifiers.</p>
+          <p class="section-copy">The runtime is a graph of small verifiable jobs, not a single model invocation. Each fragment can be placed where execution is cheapest or most reusable.</p>
         </div>
-        <div class="grid cols-5">
-          <article class="card compact"><span class="kicker">01 / Context owners</span><h3>Publish stable chunks</h3><p>Long contexts are chunked, versioned, hashed, embedded, summarized, and made addressable without exposing unnecessary raw data.</p></article>
-          <article class="card compact"><span class="kicker">02 / Schedulers</span><h3>Route fragments</h3><p>The scheduler chooses where each query-chunk score, merge, cache lookup, or fallback should execute.</p></article>
-          <article class="card compact"><span class="kicker">03 / Workers</span><h3>Run local inference</h3><p>Workers execute small ONNX/MAX/vLLM/Nx-compatible units near the relevant model, adapter, chunk, or cache.</p></article>
-          <article class="card compact"><span class="kicker">04 / Cache nodes</span><h3>Reuse artifacts</h3><p>Embeddings, summaries, local scores, merge states, fallback answers, and receipts become network-level assets.</p></article>
-          <article class="card compact"><span class="kicker">05 / Verifiers</span><h3>Check claims</h3><p>Receipts support spot recomputation, drift checks, worker scoring, and quarantine of bad artifacts or unreliable nodes.</p></article>
+        <div class="grid cols-4">
+          <article class="card compact"><span class="kicker">1 / Address</span><h3>Hash the context</h3><p>Chunk the long context once. Version every fragment by corpus, tokenizer, model snapshot, adapter, and precision.</p></article>
+          <article class="card compact"><span class="kicker">2 / Place</span><h3>Route the query</h3><p>Send short-query work only to relevant fragments, cached summaries, warm workers, or known fallback answers.</p></article>
+          <article class="card compact"><span class="kicker">3 / Reduce</span><h3>Merge sparse evidence</h3><p>Combine local scores, citations, summaries, and conflict checks into an answer or escalation decision.</p></article>
+          <article class="card compact"><span class="kicker">4 / Verify</span><h3>Issue receipts</h3><p>Record hashes, worker IDs, cache hits, fallback calls, latency, cost, and spot-recompute checks.</p></article>
         </div>
-        <div class="example">
-          <h3>Network intuition</h3>
-          <p>A short query does not drag a whole data room through one model. OVIR.net sends small, content-addressed work fragments to the places that already hold the relevant context, model, cache, or fallback answer. The network realizes efficiency because placement, reuse, and verification happen at fragment granularity.</p>
-        </div>
-      </section>
-
-      <section id="how-it-works" aria-labelledby="how-title">
-        <div class="section-head">
-          <h2 id="how-title">How the distributed shortcut works</h2>
-          <p class="section-copy">BigBird is the useful analogy: instead of allowing every token to attend to every token, preserve local windows, a small number of global summaries, and a sparse path for long-range evidence. OVIR.net turns that idea into a network protocol for repeated inference over shared contexts.</p>
-        </div>
-
         <div class="example">
           <h3>Concrete example</h3>
-          <p>A user asks a 20-token question against a 2,000-page data room. OVIR.net does not run the full model over the whole room. It routes the query to cached chunk summaries, scores likely evidence chunks in parallel across the network, merges the best local evidence, and escalates only if the evidence is weak, conflicting, or globally ambiguous.</p>
-        </div>
-
-        <div class="grid cols-4" style="margin-top: 14px;">
-          <article class="card compact"><span class="kicker">1 / Preprocess</span><h3>Chunk the context once</h3><p>Split the long context into stable fragments. Store hashes, embeddings, summaries, citations, and version metadata.</p></article>
-          <article class="card compact"><span class="kicker">2 / Query</span><h3>Fan out short queries</h3><p>Send the query only to relevant fragments or fragment clusters instead of the entire context.</p></article>
-          <article class="card compact"><span class="kicker">3 / Score</span><h3>Run local workers</h3><p>Each worker scores query-fragment relevance and emits evidence, uncertainty, and a compact summary.</p></article>
-          <article class="card compact"><span class="kicker">4 / Merge</span><h3>Reduce sparse evidence</h3><p>A reducer combines evidence into an answer, ranking, citation set, or escalation decision.</p></article>
-        </div>
-
-        <div class="flow" style="margin-top: 14px;">
-          <div class="step"><strong>Address the stable context</strong><small>hash every fragment by corpus version, tokenizer, model snapshot, adapter, precision, and runtime config.</small></div>
-          <div class="step"><strong>Reuse network artifacts</strong><small>return cached embeddings, summaries, chunk scores, previous fallbacks, and receipts when constraints match.</small></div>
-          <div class="step"><strong>Distribute only the misses</strong><small>run query-fragment scoring on workers that already hold the right context, model, adapter, or cached summary.</small></div>
-          <div class="step"><strong>Merge with sparse global state</strong><small>combine local hits, a few global corpus summaries, and conflict checks instead of full all-token attention.</small></div>
-          <div class="step"><strong>Escalate when needed</strong><small>use a heavier model path for globally dependent, contradictory, low-confidence, or high-value answers.</small></div>
-          <div class="step"><strong>Cache the escalation</strong><small>store the expensive answer, evidence set, model snapshot, confidence decision, and receipt so similar future queries are cheaper.</small></div>
+          <p>A 20-token question targets a 2,000-page data room. OVIR.net does not push the full room through one model. It retrieves cached fragment summaries, scores likely evidence fragments across the network, merges the strongest evidence, and escalates only if the result is weak, conflicting, or globally dependent.</p>
         </div>
       </section>
 
       <section id="fallbacks" aria-labelledby="fallbacks-title">
         <div class="section-head">
           <h2 id="fallbacks-title">Fallbacks are network memory</h2>
-          <p class="section-copy">The practical promise is not perfect approximation. The promise is a cheaper routing policy: answer easy repeated cases from distributed cached evidence, identify hard cases, pay for the full model, and turn that expensive result into reusable network memory.</p>
+          <p class="section-copy">A fallback is not a failure. It is an expensive answer that becomes reusable state for future routing, acceptance, and verification.</p>
         </div>
-        <div class="grid cols-3">
-          <article class="card compact"><span class="kicker">Trigger</span><h3>Low confidence</h3><p>Local scores are flat, evidence is weak, or the reducer cannot separate top candidates.</p></article>
-          <article class="card compact"><span class="kicker">Trigger</span><h3>Conflict</h3><p>Different fragments provide incompatible answers, requiring full-context reconciliation.</p></article>
-          <article class="card compact"><span class="kicker">Trigger</span><h3>Global dependency</h3><p>The query asks for comparison, synthesis, ordering, or reasoning across many distant spans.</p></article>
-          <article class="card compact"><span class="kicker">Cache</span><h3>Fallback answer</h3><p>Store the heavier model response, cited evidence, uncertainty score, corpus version, and worker receipt.</p></article>
-          <article class="card compact"><span class="kicker">Cache</span><h3>Fallback boundary</h3><p>Store which query patterns failed the shortcut so network routing improves over time.</p></article>
-          <article class="card compact"><span class="kicker">Verify</span><h3>Receipts</h3><p>Record artifact hashes, worker IDs, cache hits, full-model calls, latency, cost, and drift checks.</p></article>
-        </div>
-        <div class="matrix" aria-label="Success metrics">
-          <div class="matrix-cell"><b>Acceptance rate</b><span>Share of queries handled by cached sparse evidence without quality loss.</span></div>
-          <div class="matrix-cell"><b>Fallback rate</b><span>Share of queries routed to full-context or heavier model execution.</span></div>
-          <div class="matrix-cell"><b>Reuse rate</b><span>How often fragment artifacts or fallback responses are reused by later queries.</span></div>
-          <div class="matrix-cell"><b>Cost per accepted answer</b><span>Total network cost divided by answers accepted after fallback and verification.</span></div>
+        <div class="flow">
+          <div class="step"><strong>Trigger fallback</strong><small>low confidence, conflicting chunks, global comparison, synthesis, ordering, or high-value answer.</small></div>
+          <div class="step"><strong>Run heavier path</strong><small>use a full-context model, larger reranker, domain model, or human-reviewed path when needed.</small></div>
+          <div class="step"><strong>Cache the result</strong><small>store answer, citations, evidence set, corpus version, model snapshot, confidence boundary, and receipt.</small></div>
+          <div class="step"><strong>Improve routing</strong><small>similar future queries can reuse the fallback or avoid the shortcut boundary that failed.</small></div>
         </div>
       </section>
 
       <section id="stack" aria-labelledby="stack-title">
         <div class="section-head">
-          <h2 id="stack-title">Runtime network stack</h2>
-          <p class="section-copy">OVIR.net sits above inference engines and below applications: a decentralized scheduler, content-addressed store, cache fabric, sparse evidence reducer, fallback router, and receipt layer.</p>
+          <h2 id="stack-title">Minimal stack</h2>
+          <p class="section-copy">Only five capabilities are essential: distributed placement, portable execution, content identity, shared cache, and verifiable receipts.</p>
         </div>
-        <div class="grid cols-5" aria-label="Technology stack">
-          <div class="card compact"><span class="kicker">Substrate</span><h3>Distributed execution</h3><p>Ray tasks and actors; BEAM/Elixir supervision; Kubernetes or VM swarms for placement and recovery.</p></div>
-          <div class="card compact"><span class="kicker">Engines</span><h3>Local inference</h3><p>MAX, Mojo kernels, ONNX Runtime, vLLM, SGLang, Nx, Ortex, or other node-local backends.</p></div>
-          <div class="card compact"><span class="kicker">Identity</span><h3>Content addressing</h3><p>Hash addressing for corpora, fragments, queries, embeddings, summaries, fallbacks, snapshots, and outputs.</p></div>
-          <div class="card compact"><span class="kicker">Memory</span><h3>Cache fabric</h3><p>CAS over local disks, object stores, GPU memory, CPU RAM, and network-transfer-aware KV movement.</p></div>
-          <div class="card compact"><span class="kicker">Trust</span><h3>Receipts</h3><p>Telemetry for what ran, what was reused, what escalated, what was verified, and what was avoided.</p></div>
+        <div class="grid cols-4">
+          <article class="card compact"><span class="kicker">Placement</span><h3>Scheduler</h3><p>Routes fragments to workers by context locality, cache availability, model availability, cost, and trust score.</p></article>
+          <article class="card compact"><span class="kicker">Execution</span><h3>Portable inference units</h3><p>Runs small model fragments with a backend-neutral graph boundary, such as ONNX where practical.</p></article>
+          <article class="card compact"><span class="kicker">Memory</span><h3>Content-addressed cache</h3><p>Stores fragment summaries, scores, embeddings, fallback answers, and receipts by stable hashes.</p></article>
+          <article class="card compact"><span class="kicker">Trust</span><h3>Receipt verifier</h3><p>Samples recomputation, compares hashes, tracks drift, and penalizes unreliable workers or artifacts.</p></article>
         </div>
       </section>
 
       <section id="references" aria-labelledby="references-title">
         <div class="section-head">
           <h2 id="references-title">Reference map</h2>
-          <p class="section-copy">A compact set of inspirations for sparse long-context inference, distributed execution, optimized serving, content addressing, graph portability, and verifiable execution.</p>
+          <p class="section-copy">Kept references only where they directly support the current thesis: sparse long-context shortcuts, distributed execution, portable graph fragments, content addressing, and verifiable execution.</p>
         </div>
         <div class="refs">
           <a class="ref" href="https://github.com/metonymize-kripa/ovir"><span><b>OVIR.net repository</b><small>Project home</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://arxiv.org/abs/2007.14062"><span><b>BigBird</b><small>Sparse long-context attention with local, random, and global paths</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://arxiv.org/abs/2004.05150"><span><b>Longformer</b><small>Local windows plus task-motivated global attention</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://research.google/pubs/fnet-mixing-tokens-with-fourier-transforms/"><span><b>FNet</b><small>Token mixing without learned dense attention</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://engineering.fb.com/2024/07/10/production-engineering/tail-utilization-ads-inference-meta/"><span><b>Meta ads inference</b><small>Tail utilization and ranking workload pressure</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://newsletter.semianalysis.com/p/inferencex-v2-nvidia-blackwell-vs"><span><b>SemiAnalysis InferenceX</b><small>LLM serving, prefill/decode, KV movement</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://docs.ray.io/en/latest/ray-overview/use-cases.html"><span><b>Ray use cases</b><small>Distributed tasks, actors, serving, batch inference</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://www.modular.com/open-source/max"><span><b>Modular MAX</b><small>High-performance GenAI serving and Mojo stack</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://www.unison-lang.org/docs/the-big-idea/"><span><b>Unison</b><small>Content-addressed code and dependency identity</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://onnx.ai/"><span><b>ONNX</b><small>Portable neural graph and operator model</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://docs.gensyn.ai/tech/ree"><span><b>Gensyn REE</b><small>Reproducible execution inspiration</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://docs.dynamo.nvidia.com/dynamo/getting-started/introduction"><span><b>NVIDIA Dynamo</b><small>Distributed generative inference reference point</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://arxiv.org/abs/2007.14062"><span><b>BigBird</b><small>Sparse long-context attention as the core analogy</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://docs.ray.io/en/latest/ray-overview/use-cases.html"><span><b>Ray</b><small>Distributed tasks, actors, serving, and batch execution</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://onnx.ai/"><span><b>ONNX</b><small>Portable neural graph boundary for fragments</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://www.unison-lang.org/docs/the-big-idea/"><span><b>Unison</b><small>Content-addressed identity inspiration</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://docs.gensyn.ai/tech/ree"><span><b>Gensyn REE</b><small>Reproducible execution and receipt inspiration</small></span><span class="arrow">↗</span></a>
         </div>
       </section>
     </main>
