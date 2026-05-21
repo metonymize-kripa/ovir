@@ -336,6 +336,7 @@
           <div class="metric">
             <div class="metric-row"><span class="metric-label">Scope</span><span class="metric-value">Short query / shared context</span></div>
             <div class="metric-row"><span class="metric-label">Unit</span><span class="metric-value">Content-addressed fragment</span></div>
+            <div class="metric-row"><span class="metric-label">Runtime</span><span class="metric-value">Elixir / OTP + Nx</span></div>
             <div class="metric-row"><span class="metric-label">Advantage</span><span class="metric-value">Reuse + locality</span></div>
             <div class="metric-row"><span class="metric-label">Trust</span><span class="metric-value">Receipts + recompute</span></div>
           </div>
@@ -405,9 +406,9 @@
           <p class="section-copy">Only five capabilities are essential: distributed placement, portable execution, content identity, shared cache, and verifiable receipts.</p>
         </div>
         <div class="grid cols-4">
-          <article class="card compact"><span class="kicker">Placement</span><h3>Scheduler</h3><p>Routes fragments to workers by context locality, cache availability, model availability, cost, and trust score.</p></article>
-          <article class="card compact"><span class="kicker">Execution</span><h3>Portable inference units</h3><p>Runs small model fragments with a backend-neutral graph boundary, such as ONNX where practical.</p></article>
-          <article class="card compact"><span class="kicker">Memory</span><h3>Content-addressed cache</h3><p>Stores fragment summaries, scores, embeddings, fallback answers, and receipts by stable hashes.</p></article>
+          <article class="card compact"><span class="kicker">Placement</span><h3>Elixir OTP scheduler</h3><p>GenServer workers under a Supervisor tree route fragments by context locality, cache availability, cost, and trust score. Crashed workers restart automatically.</p></article>
+          <article class="card compact"><span class="kicker">Execution</span><h3>Nx + ONNX fragments</h3><p>Tensor operations run via Elixir Nx (EXLA backend). Expert and attention fragments are serialized as ONNX graphs and loaded via Ortex, giving a backend-neutral execution boundary.</p></article>
+          <article class="card compact"><span class="kicker">Memory</span><h3>Content-addressed cache</h3><p>ETS stores fragment summaries, scores, embeddings, fallback answers, and receipts keyed by SHA-256 of the ONNX model bytes + input hash.</p></article>
           <article class="card compact"><span class="kicker">Trust</span><h3>Receipt verifier</h3><p>Samples recomputation, compares hashes, tracks drift, and penalizes unreliable workers or artifacts.</p></article>
         </div>
       </section>
@@ -420,8 +421,10 @@
         <div class="refs">
           <a class="ref" href="https://github.com/metonymize-kripa/ovir"><span><b>OVIR.net repository</b><small>Project home</small></span><span class="arrow">↗</span></a>
           <a class="ref" href="https://arxiv.org/abs/2007.14062"><span><b>BigBird</b><small>Sparse long-context attention as the core analogy</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://docs.ray.io/en/latest/ray-overview/use-cases.html"><span><b>Ray</b><small>Distributed tasks, actors, serving, and batch execution</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://hexdocs.pm/nx"><span><b>Nx</b><small>Numerical Elixir — tensor ops and defn for fragment execution</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://hexdocs.pm/ortex"><span><b>Ortex</b><small>ONNX Runtime bindings for Elixir — portable graph execution</small></span><span class="arrow">↗</span></a>
           <a class="ref" href="https://onnx.ai/"><span><b>ONNX</b><small>Portable neural graph boundary for fragments</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://www.erlang.org/doc/system/distributed.html"><span><b>Erlang distribution</b><small>Native multi-node BEAM execution — no extra framework</small></span><span class="arrow">↗</span></a>
           <a class="ref" href="https://www.unison-lang.org/docs/the-big-idea/"><span><b>Unison</b><small>Content-addressed identity inspiration</small></span><span class="arrow">↗</span></a>
           <a class="ref" href="https://docs.gensyn.ai/tech/ree"><span><b>Gensyn REE</b><small>Reproducible execution and receipt inspiration</small></span><span class="arrow">↗</span></a>
         </div>
