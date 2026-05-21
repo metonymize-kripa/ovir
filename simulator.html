@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OVIR.net — Runtime Simulation</title>
+  <style>
+    :root {
+      --bg: #f7f5ef;
+      --ink: #0d0f12;
+      --muted: #626a75;
+      --line: #d9d4c8;
+      --card: #fffefa;
+      --radius: 22px;
+      --max: 1160px;
+      
+      --accent-blue: #1d6fa5;
+      --accent-blue-bg: #e0f0fd;
+      --accent-orange: #b45309;
+      --accent-orange-bg: #fef3c7;
+      --accent-green: #1d9e75;
+      --accent-green-bg: #d8f3e8;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 78% 4%, rgba(13, 15, 18, 0.05), transparent 30rem),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.46), transparent 24rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(calc(100% - 40px), var(--max)); margin: 0 auto; }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px 0;
+    }
+    .brand { display: inline-flex; align-items: center; gap: 12px; font-weight: 780; letter-spacing: -0.045em; }
+    .mark { width: 34px; height: 34px; border: 1px solid var(--ink); border-radius: 50%; display: grid; place-items: center; font-size: 14px; font-weight: 850; }
+    nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 18px; color: var(--muted); font-size: 14px; }
+    nav a:hover { color: var(--ink); }
+
+    main { padding: 20px 0 72px; }
+
+    /* Layout */
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 32px;
+      align-items: start;
+      margin-top: 24px;
+    }
+
+    /* Top Copy */
+    .section-head { margin-bottom: 24px; }
+    h1 { font-size: clamp(32px, 4vw, 48px); line-height: 1.05; letter-spacing: -0.06em; margin: 0 0 16px 0; }
+    .lede { font-size: 18px; color: var(--muted); margin: 0; max-width: 800px; }
+
+    /* Panels */
+    .panel {
+      background: rgba(255, 254, 250, 0.82);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 12px 40px rgba(13, 15, 18, 0.03);
+    }
+
+    /* Grid Area */
+    .grid-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; }
+    .grid-title { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+    .grid-meta { font-size: 13px; color: var(--muted); font-family: ui-monospace, monospace; }
+
+    .chunk-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .chunk {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      background: var(--line);
+      border: 1px solid rgba(0,0,0,0.05);
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Domain coloring */
+    .cat-0 { background: #e0e7ff; border-color: #c7d2fe; } /* Legal */
+    .cat-1 { background: #ffedd5; border-color: #fed7aa; } /* Financial */
+    .cat-2 { background: #fce7f3; border-color: #fbcfe8; } /* HR */
+    .cat-3 { background: #dcfce7; border-color: #bbf7d0; } /* Tech */
+
+    /* States */
+    .chunk.state-scan { background: var(--accent-blue); transform: scale(1.08); box-shadow: 0 4px 12px rgba(29, 111, 165, 0.3); z-index: 2; border-color: var(--accent-blue); }
+    .chunk.state-compute { background: var(--accent-orange); transform: scale(1.15); box-shadow: 0 6px 16px rgba(180, 83, 9, 0.3); z-index: 3; border-color: var(--accent-orange); }
+    .chunk.state-cache-hit { background: var(--accent-green); transform: scale(1.15); box-shadow: 0 6px 16px rgba(29, 158, 117, 0.3); z-index: 3; border-color: var(--accent-green); }
+    .chunk.state-cached { background: var(--accent-green-bg); border-color: var(--accent-green); opacity: 0.9; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+    /* Analysis Panel */
+    .analysis-block { margin-bottom: 24px; }
+    .analysis-block:last-child { margin-bottom: 0; }
+    
+    .kicker {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .query-box {
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px;
+      background: rgba(13, 15, 18, 0.04);
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      margin-bottom: 8px;
+      min-height: 52px;
+    }
+
+    /* Math Formulas */
+    .formula {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      background: rgba(13, 15, 18, 0.045);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-top: 8px;
+    }
+
+    .math-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dashed rgba(13,15,18,0.1);
+      padding: 4px 0;
+    }
+    .math-row:last-child { border-bottom: none; }
+    .math-label { color: var(--muted); }
+    .math-val { font-weight: 700; }
+    
+    .val-bad { color: var(--accent-orange); }
+    .val-good { color: var(--accent-green); }
+
+    /* Chart */
+    .chart-container {
+      margin-top: 16px;
+      height: 140px;
+      width: 100%;
+      position: relative;
+    }
+    canvas { width: 100%; height: 100%; }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 20px;
+      border-radius: 999px;
+      border: 1px solid var(--ink);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--ink);
+      transition: background 0.2s;
+    }
+    .button.primary { background: var(--ink); color: white; }
+    .button.primary:hover { opacity: 0.9; }
+    .button:hover:not(.primary) { background: rgba(13,15,18,0.05); }
+    .button.active { background: var(--accent-green); border-color: var(--accent-green); color: white; }
+
+    @media (max-width: 960px) {
+      .sim-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="index.html" aria-label="OVIR.net home">
+        <span class="mark">O</span>
+        <span>OVIR.net</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="index.html#fit">Fit</a>
+        <a href="index.html#network">Network</a>
+        <a href="index.html#stack">Stack</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="section-head">
+        <h1>Runtime caching analysis</h1>
+        <p class="lede">This simulates a 1,000,000 token context window (100 fragments of 10k tokens each). Watch how the theoretical compute cost drops as semantically overlapping queries populate the ETS fragment cache.</p>
+      </div>
+
+      <div class="sim-layout">
+        <!-- Left: Context Map -->
+        <div class="panel">
+          <div class="grid-header">
+            <div class="grid-title">Addressable Context Graph</div>
+            <div class="grid-meta">100 fragments × 10,000 tokens</div>
+          </div>
+          
+          <div class="chunk-grid" id="grid"></div>
+
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#e0e7ff;border:1px solid #c7d2fe"></div> Legal</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ffedd5;border:1px solid #fed7aa"></div> Financial</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fce7f3;border:1px solid #fbcfe8"></div> HR</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#dcfce7;border:1px solid #bbf7d0"></div> Tech</div>
+            <div style="flex-basis: 100%; height: 0;"></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div> Routed</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-orange)"></div> Compute (Miss)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div> Reused (Hit)</div>
+          </div>
+
+          <div class="controls">
+            <button class="button primary" id="btn-run" onclick="triggerQuery()">Run Next Query</button>
+            <button class="button" id="btn-auto" onclick="toggleAuto()">Auto-play</button>
+            <button class="button" onclick="resetSim()">Reset State</button>
+          </div>
+        </div>
+
+        <!-- Right: Scientific Analysis -->
+        <div class="panel">
+          <div class="analysis-block">
+            <span class="kicker">Current Execution</span>
+            <div class="query-box" id="q-text">Awaiting network trigger...</div>
+          </div>
+
+          <div class="analysis-block">
+            <span class="kicker">Compute Math</span>
+            <div class="formula">
+              <div class="math-row">
+                <span class="math-label">Full Attention Baseline O(N²):</span>
+                <span class="math-val" id="m-base">1,000,000²</span>
+              </div>
+              <div class="math-row">
+                <span class="math-label">Sparse Router (PEER) Extraction:</span>
+                <span class="math-val" id="m-routed">—</span>
+              </div>
+              <div class="math-row">
+                <span class="math-label">Cache Hit Ratio:</span>
+                <span class="math-val" id="m-hitrate">—</span>
+              </div>
+              <div class="math-row">
+                <span class="math-label">Net New Compute (Tokens):</span>
+                <span class="math-val val-bad" id="m-compute">—</span>
+              </div>
+              <div class="math-row">
+                <span class="math-label">Actual FLOPs % vs Baseline:</span>
+                <span class="math-val val-good" id="m-saved">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="analysis-block">
+            <span class="kicker">Amortized Sub-linear Cost</span>
+            <div class="chart-container">
+              <canvas id="cost-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Configuration
+    const GRID_SIZE = 100; // 10x10
+    const TOKENS_PER_CHUNK = 10000;
+    const TOTAL_TOKENS = GRID_SIZE * TOKENS_PER_CHUNK;
+    
+    // 4 Domains: Legal (0), Financial (1), HR (2), Tech (3)
+    // Distributed logically: Left half Legal/HR, Right half Financial/Tech
+    const cellDomains = [];
+    for(let i=0; i<GRID_SIZE; i++) {
+      const col = i % 10;
+      const row = Math.floor(i / 10);
+      let cat;
+      if (col < 5 && row < 5) cat = 0; // Legal (Top Left)
+      else if (col >= 5 && row < 5) cat = 1; // Fin (Top Right)
+      else if (col < 5 && row >= 5) cat = 2; // HR (Bottom Left)
+      else cat = 3; // Tech (Bottom Right)
+      cellDomains.push(cat);
+    }
+
+    // Queries mapped to domains to simulate realistic overlap
+    const WORKLOAD = [
+      { t: "Extract specific indemnification clauses and liability caps.", domains: [0, 1], sparseTokens: 150000 },
+      { t: "What are the engineering IP assignment conditions for contractors?", domains: [0, 3], sparseTokens: 120000 },
+      { t: "Are executive compensation plans tied to tech deliverables?", domains: [2, 3, 1], sparseTokens: 200000 },
+      { t: "List all open litigation involving our data pipeline architecture.", domains: [0, 3], sparseTokens: 180000 },
+      { t: "Identify severance packages for senior engineering staff.", domains: [2, 3], sparseTokens: 90000 },
+      { t: "Check non-compete bounds for the CFO and VP of Finance.", domains: [0, 2, 1], sparseTokens: 160000 },
+      { t: "Summarize the tax liabilities associated with IP transfer.", domains: [1, 0, 3], sparseTokens: 250000 },
+      { t: "Do the employment agreements cover remote engineering work?", domains: [2, 3], sparseTokens: 110000 }
+    ];
+
+    let cachedChunks = new Set();
+    let qCount = 0;
+    let isRunning = false;
+    let autoTimer = null;
+    let isAuto = false;
+    
+    // Metrics history for chart: [baseline cost, actual computed cost]
+    const history = [];
+
+    // Initialize Grid
+    const gridEl = document.getElementById('grid');
+    for(let i=0; i<GRID_SIZE; i++) {
+      const el = document.createElement('div');
+      el.className = `chunk cat-${cellDomains[i]}`;
+      el.id = `c${i}`;
+      gridEl.appendChild(el);
+    }
+
+    // Chart Setup
+    const ctx = document.getElementById('cost-chart').getContext('2d');
+    
+    function drawChart() {
+      const W = ctx.canvas.width = ctx.canvas.offsetWidth;
+      const H = ctx.canvas.height = ctx.canvas.offsetHeight;
+      ctx.clearRect(0,0,W,H);
+      
+      const pad = 20;
+      const pw = W - pad*2;
+      const ph = H - pad*2;
+
+      // Y axis (logarithmic feel)
+      ctx.strokeStyle = "rgba(13, 15, 18, 0.1)";
+      ctx.beginPath();
+      ctx.moveTo(pad, pad); ctx.lineTo(W-pad, pad); // 100%
+      ctx.moveTo(pad, pad + ph); ctx.lineTo(W-pad, pad + ph); // 0%
+      ctx.stroke();
+
+      if(history.length === 0) return;
+
+      const step = history.length > 1 ? pw / (history.length - 1) : 0;
+      
+      // Plot actual compute cost over time
+      ctx.beginPath();
+      ctx.strokeStyle = "#1d9e75"; // accent green
+      ctx.lineWidth = 3;
+      ctx.lineJoin = "round";
+      
+      history.forEach((val, i) => {
+        const x = pad + (i * step);
+        // val is % of sparse tokens computed vs full baseline O(N^2)
+        // Since O(N^2) is huge, we'll plot % of the *sparse* expectation.
+        // Actually, let's plot "Compute Operations" (1.0 = full 150k sparse compute, drops to 0 when 100% cached)
+        const y = pad + ph - (ph * val);
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+
+      // Add points
+      history.forEach((val, i) => {
+        const x = pad + (i * step);
+        const y = pad + ph - (ph * val);
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI*2);
+        ctx.fillStyle = "#1d9e75";
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+    }
+    
+    // Handle Window Resize for chart
+    window.addEventListener('resize', drawChart);
+    drawChart();
+
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    function setChunkClass(id, cls) {
+      const el = document.getElementById(`c${id}`);
+      if(el) {
+        // preserve category base
+        el.className = `chunk cat-${cellDomains[id]} ${cls}`;
+      }
+    }
+
+    async function triggerQuery() {
+      if(isRunning) return;
+      isRunning = true;
+      
+      const q = WORKLOAD[qCount % WORKLOAD.length];
+      qCount++;
+      
+      document.getElementById('q-text').textContent = q.t;
+
+      // 1. Determine Routed Chunks
+      const targetChunksCount = Math.floor(q.sparseTokens / TOKENS_PER_CHUNK);
+      const routedIds = [];
+      
+      // Pick random chunks from the requested domains
+      const availableInDomains = [];
+      for(let i=0; i<GRID_SIZE; i++) {
+        if(q.domains.includes(cellDomains[i])) availableInDomains.push(i);
+      }
+      
+      // Fisher-Yates shuffle to pick N
+      for(let i = availableInDomains.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [availableInDomains[i], availableInDomains[j]] = [availableInDomains[j], availableInDomains[i]];
+      }
+      routedIds.push(...availableInDomains.slice(0, targetChunksCount));
+
+      // 2. Separate Hits and Misses
+      const hits = [];
+      const misses = [];
+      routedIds.forEach(id => {
+        if(cachedChunks.has(id)) hits.push(id);
+        else misses.push(id);
+      });
+
+      // Update Math UI - Step 1: Routing
+      document.getElementById('m-routed').textContent = `${q.sparseTokens.toLocaleString()} tokens`;
+      document.getElementById('m-hitrate').textContent = `Scanning...`;
+      document.getElementById('m-compute').textContent = `...`;
+      document.getElementById('m-saved').textContent = `...`;
+
+      // Animation: Scan
+      const stagger = 15;
+      for(let i=0; i<routedIds.length; i++) {
+        setTimeout(() => {
+          if(!cachedChunks.has(routedIds[i])) setChunkClass(routedIds[i], 'state-scan');
+        }, i * stagger);
+      }
+      await delay((routedIds.length * stagger) + 300);
+
+      // Update Math UI - Step 2: Hits/Misses
+      const hitRate = routedIds.length > 0 ? (hits.length / routedIds.length * 100) : 0;
+      document.getElementById('m-hitrate').textContent = `${hits.length} fragments (${hitRate.toFixed(1)}%)`;
+
+      // Animation: Evaluate
+      hits.forEach(id => setChunkClass(id, 'state-cache-hit'));
+      misses.forEach(id => setChunkClass(id, 'state-compute'));
+      await delay(600);
+
+      // Math Math UI - Step 3: Compute & Amortization
+      const computedTokens = misses.length * TOKENS_PER_CHUNK;
+      document.getElementById('m-compute').textContent = `${computedTokens.toLocaleString()} tokens`;
+      
+      // The massive O(N^2) math:
+      // Let's say baseline compute = 1,000,000^2 = 1 trillion ops.
+      // Sparse PEER router limits context to say 150,000.
+      // 150,000^2 = 22.5 billion ops (already a ~97.7% reduction).
+      // But with cache, we only compute on misses. Say 30,000 tokens missed.
+      // 30,000^2 = 900 million ops.
+      // % of baseline = 900M / 1 Trillion = 0.09%
+      
+      const baselineOps = TOTAL_TOKENS * TOTAL_TOKENS;
+      const actualOps = computedTokens * computedTokens;
+      const pctOfBaseline = actualOps / baselineOps * 100;
+      
+      document.getElementById('m-saved').textContent = `< ${pctOfBaseline.toFixed(4)}% FLOPs`;
+
+      // Update Chart History (we plot the ratio of actual ops vs max possible sparse ops for visual variance)
+      const maxSparseOps = (targetChunksCount * TOKENS_PER_CHUNK) ** 2;
+      const normalizedCompute = maxSparseOps > 0 ? (actualOps / maxSparseOps) : 0;
+      history.push(normalizedCompute);
+      if(history.length > 15) history.shift();
+      drawChart();
+
+      // Animation: Commit to Cache
+      misses.forEach(id => {
+        cachedChunks.add(id);
+        setChunkClass(id, 'state-cached');
+      });
+      hits.forEach(id => setChunkClass(id, 'state-cached'));
+
+      isRunning = false;
+    }
+
+    function toggleAuto() {
+      isAuto = !isAuto;
+      const btn = document.getElementById('btn-auto');
+      if(isAuto) {
+        btn.classList.add('active');
+        btn.textContent = 'Pause Auto';
+        runLoop();
+      } else {
+        btn.classList.remove('active');
+        btn.textContent = 'Auto-play';
+        clearTimeout(autoTimer);
+      }
+    }
+
+    async function runLoop() {
+      if(!isAuto) return;
+      await triggerQuery();
+      autoTimer = setTimeout(runLoop, 1500);
+    }
+
+    function resetSim() {
+      isAuto = false;
+      clearTimeout(autoTimer);
+      document.getElementById('btn-auto').classList.remove('active');
+      document.getElementById('btn-auto').textContent = 'Auto-play';
+      
+      cachedChunks.clear();
+      qCount = 0;
+      history.length = 0;
+      drawChart();
+
+      for(let i=0; i<GRID_SIZE; i++) {
+        setChunkClass(i, '');
+      }
+
+      document.getElementById('q-text').textContent = "Awaiting network trigger...";
+      document.getElementById('m-routed').textContent = "—";
+      document.getElementById('m-hitrate').textContent = "—";
+      document.getElementById('m-compute').textContent = "—";
+      document.getElementById('m-saved').textContent = "—";
+    }
+
+    // Initial draw
+    drawChart();
+  </script>
+</body>
+</html>
