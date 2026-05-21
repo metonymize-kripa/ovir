@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>OVIR — Opportunistic Verifiable Inference Runtime</title>
   <meta name="description"
-    content="OVIR is a content-addressed inference control plane for high-volume neural workloads: KV cache reuse, recommendation ranking, embeddings, and distributed model serving." />
+    content="OVIR is a content-addressed inference control plane for high-volume neural workloads, with a concrete Bertlet Butterfly toy model for distributed BERT-like inference." />
   <meta property="og:title" content="OVIR — Opportunistic Verifiable Inference Runtime" />
   <meta property="og:description"
     content="Content-addressed distributed inference for workloads where recomputation, cache locality, and data movement dominate cost." />
@@ -25,13 +25,8 @@
       --max: 1160px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
@@ -45,15 +40,8 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .wrap {
-      width: min(calc(100% - 40px), var(--max));
-      margin: 0 auto;
-    }
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(calc(100% - 40px), var(--max)); margin: 0 auto; }
 
     header {
       display: flex;
@@ -91,13 +79,8 @@
       font-size: 14px;
     }
 
-    nav a:hover {
-      color: var(--ink);
-    }
-
-    main {
-      padding: 40px 0 72px;
-    }
+    nav a:hover { color: var(--ink); }
+    main { padding: 40px 0 72px; }
 
     .hero {
       display: grid;
@@ -130,15 +113,10 @@
       font-size: clamp(18px, 2.1vw, 24px);
       color: var(--muted);
       margin: 30px 0 0;
-      max-width: 830px;
+      max-width: 850px;
     }
 
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 34px;
-    }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
 
     .button {
       display: inline-flex;
@@ -152,15 +130,8 @@
       font-size: 14px;
     }
 
-    .button.primary {
-      background: var(--ink);
-      color: white;
-    }
-
-    .button.secondary {
-      background: transparent;
-      color: var(--ink);
-    }
+    .button.primary { background: var(--ink); color: white; }
+    .button.secondary { background: transparent; color: var(--ink); }
 
     .panel {
       background: rgba(255, 254, 250, 0.82);
@@ -170,10 +141,7 @@
       box-shadow: 0 20px 80px rgba(13, 15, 18, 0.06);
     }
 
-    .metric {
-      display: grid;
-      gap: 14px;
-    }
+    .metric { display: grid; gap: 14px; }
 
     .metric-row {
       display: flex;
@@ -184,23 +152,11 @@
       font-size: 14px;
     }
 
-    .metric-row:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
-    }
+    .metric-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .metric-label { color: var(--muted); }
+    .metric-value { font-weight: 770; text-align: right; }
 
-    .metric-label {
-      color: var(--muted);
-    }
-
-    .metric-value {
-      font-weight: 770;
-      text-align: right;
-    }
-
-    section {
-      padding: 58px 0 0;
-    }
+    section { padding: 58px 0 0; }
 
     .section-head {
       display: grid;
@@ -219,27 +175,15 @@
 
     .section-copy {
       color: var(--muted);
-      max-width: 820px;
+      max-width: 840px;
       margin: 0;
       font-size: 17px;
     }
 
-    .grid {
-      display: grid;
-      gap: 14px;
-    }
-
-    .grid.cols-4 {
-      grid-template-columns: repeat(4, 1fr);
-    }
-
-    .grid.cols-3 {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .grid.cols-2 {
-      grid-template-columns: repeat(2, 1fr);
-    }
+    .grid { display: grid; gap: 14px; }
+    .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
 
     .card {
       background: rgba(255, 254, 250, 0.66);
@@ -249,9 +193,8 @@
       min-height: 184px;
     }
 
-    .card.compact {
-      min-height: 136px;
-    }
+    .card.compact { min-height: 136px; }
+    .card.tall { min-height: 250px; }
 
     .card span.kicker {
       display: inline-block;
@@ -263,19 +206,10 @@
       margin-bottom: 24px;
     }
 
-    .card h3 {
-      margin: 0 0 10px;
-      font-size: 18px;
-      letter-spacing: -0.035em;
-    }
+    .card h3 { margin: 0 0 10px; font-size: 18px; letter-spacing: -0.035em; }
+    .card p { color: var(--muted); margin: 0; font-size: 15px; }
 
-    .card p {
-      color: var(--muted);
-      margin: 0;
-      font-size: 15px;
-    }
-
-    .card .label {
+    .label {
       display: inline-flex;
       margin-top: 18px;
       padding: 6px 10px;
@@ -287,17 +221,8 @@
       background: rgba(255, 255, 255, 0.44);
     }
 
-    .workload {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
-    }
-
-    .workload dl {
-      display: grid;
-      gap: 9px;
-      margin: 18px 0 0;
-    }
+    .workload { display: grid; grid-template-columns: 1fr; gap: 18px; }
+    .workload dl { display: grid; gap: 9px; margin: 18px 0 0; }
 
     .workload div.row {
       display: grid;
@@ -308,22 +233,40 @@
       font-size: 14px;
     }
 
-    .workload dt {
-      margin: 0;
-      font-weight: 800;
-      color: var(--ink);
-      letter-spacing: -0.02em;
+    .workload dt { margin: 0; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+    .workload dd { margin: 0; }
+
+    .formula {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      background: rgba(13, 15, 18, 0.045);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 16px;
+      overflow-x: auto;
     }
 
-    .workload dd {
-      margin: 0;
-    }
-
-    .flow {
+    .matrix {
       display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 10px;
-      counter-reset: step;
+      margin-top: 14px;
     }
+
+    .matrix-cell {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(255, 254, 250, 0.62);
+      min-height: 116px;
+    }
+
+    .matrix-cell b { display: block; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .matrix-cell span { color: var(--muted); font-size: 14px; }
+
+    .flow { display: grid; gap: 10px; counter-reset: step; }
 
     .step {
       counter-increment: step;
@@ -350,21 +293,10 @@
       color: var(--muted);
     }
 
-    .step strong {
-      letter-spacing: -0.02em;
-    }
+    .step strong { letter-spacing: -0.02em; }
+    .step small { color: var(--muted); text-align: right; max-width: 480px; }
 
-    .step small {
-      color: var(--muted);
-      text-align: right;
-      max-width: 420px;
-    }
-
-    .stack {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-    }
+    .stack { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
 
     .stack-item {
       border: 1px solid var(--line);
@@ -374,23 +306,10 @@
       min-height: 148px;
     }
 
-    .stack-item b {
-      display: block;
-      margin-bottom: 10px;
-      letter-spacing: -0.025em;
-    }
+    .stack-item b { display: block; margin-bottom: 10px; letter-spacing: -0.025em; }
+    .stack-item p { margin: 0; color: var(--muted); font-size: 14px; }
 
-    .stack-item p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .refs {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
+    .refs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
     .ref {
       display: flex;
@@ -403,22 +322,10 @@
       background: rgba(255, 254, 250, 0.62);
     }
 
-    .ref:hover {
-      background: var(--card);
-    }
-
-    .ref b {
-      display: block;
-      letter-spacing: -0.02em;
-    }
-
-    .ref small {
-      color: var(--muted);
-    }
-
-    .arrow {
-      color: var(--muted);
-    }
+    .ref:hover { background: var(--card); }
+    .ref b { display: block; letter-spacing: -0.02em; }
+    .ref small { color: var(--muted); }
+    .arrow { color: var(--muted); }
 
     footer {
       display: flex;
@@ -431,54 +338,18 @@
     }
 
     @media (max-width: 1040px) {
-      .grid.cols-4 {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .stack {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .grid.cols-4, .matrix { grid-template-columns: repeat(2, 1fr); }
+      .stack { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 880px) {
-
-      header,
-      footer {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      nav {
-        justify-content: flex-start;
-      }
-
-      .hero {
-        grid-template-columns: 1fr;
-        padding-top: 50px;
-      }
-
-      .section-head {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-
-      .grid.cols-4,
-      .grid.cols-3,
-      .grid.cols-2,
-      .refs,
-      .stack {
-        grid-template-columns: 1fr;
-      }
-
-      .step {
-        grid-template-columns: 48px 1fr;
-        align-items: start;
-      }
-
-      .step small {
-        grid-column: 2;
-        text-align: left;
-      }
+      header, footer { align-items: flex-start; flex-direction: column; }
+      nav { justify-content: flex-start; }
+      .hero { grid-template-columns: 1fr; padding-top: 50px; }
+      .section-head { grid-template-columns: 1fr; gap: 12px; }
+      .grid.cols-4, .grid.cols-3, .grid.cols-2, .refs, .stack, .matrix { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 48px 1fr; align-items: start; }
+      .step small { grid-column: 2; text-align: left; }
     }
   </style>
 </head>
@@ -492,6 +363,7 @@
       </a>
       <nav aria-label="Primary navigation">
         <a href="#workloads">Workloads</a>
+        <a href="#toy-model">Toy model</a>
         <a href="#use-cases">Use cases</a>
         <a href="#stack">Stack</a>
         <a href="#runtime">Runtime</a>
@@ -505,23 +377,18 @@
         <div>
           <p class="eyebrow">Opportunistic Verifiable Inference Runtime</p>
           <h1 id="hero-title">Stop recomputing neural work.</h1>
-          <p class="lede">OVIR is a content-addressed execution control plane for high-volume inference workloads where
-            recomputation, cache locality, KV movement, embedding lookups, and tail latency dominate cost.</p>
+          <p class="lede">OVIR is a content-addressed execution control plane for high-volume inference workloads where recomputation, cache locality, KV movement, embedding lookups, and tail latency dominate cost.</p>
           <div class="actions" aria-label="Project links">
             <a class="button primary" href="https://github.com/metonymize-kripa/ovir">View GitHub Repo</a>
-            <a class="button secondary" href="#workloads">Target workloads</a>
+            <a class="button secondary" href="#toy-model">Bertlet Butterfly toy model</a>
           </div>
         </div>
         <aside class="panel" aria-label="Project summary">
           <div class="metric">
-            <div class="metric-row"><span class="metric-label">Status</span><span class="metric-value">Placeholder /
-                proposal</span></div>
-            <div class="metric-row"><span class="metric-label">Primitive</span><span class="metric-value">Hash-addressed
-                work units</span></div>
-            <div class="metric-row"><span class="metric-label">Focus</span><span class="metric-value">LLM + ranking
-                inference</span></div>
-            <div class="metric-row"><span class="metric-label">Control plane</span><span
-                class="metric-value">Distributed scheduler + CAS</span></div>
+            <div class="metric-row"><span class="metric-label">Status</span><span class="metric-value">Toy model + proposal</span></div>
+            <div class="metric-row"><span class="metric-label">Primitive</span><span class="metric-value">Hash-addressed work units</span></div>
+            <div class="metric-row"><span class="metric-label">Concrete test</span><span class="metric-value">BERT teacher → many Bertlets</span></div>
+            <div class="metric-row"><span class="metric-label">Target shape</span><span class="metric-value">N² attention → N log N mixing</span></div>
           </div>
         </aside>
       </section>
@@ -529,215 +396,162 @@
       <section id="workloads" aria-labelledby="workloads-title">
         <div class="section-head">
           <h2 id="workloads-title">Workloads first</h2>
-          <p class="section-copy">OVIR starts where inference spend concentrates: repeated prefixes, large KV caches,
-            recommendation ranking, embeddings, adapter-heavy serving, and batch workflows that can reuse intermediate
-            neural computation.</p>
+          <p class="section-copy">OVIR starts where inference spend concentrates: repeated prefixes, large KV caches, recommendation ranking, embeddings, adapter-heavy serving, and batch workflows that can reuse intermediate neural computation.</p>
         </div>
         <div class="grid cols-4">
           <article class="card workload">
             <span class="kicker">01 / LLM serving</span>
             <h3>Long-context KV and prefix reuse</h3>
-            <p>Repeated system prompts, RAG context, agent history, and document prefixes should become reusable
-              execution artifacts.</p>
+            <p>Repeated system prompts, RAG context, agent history, and document prefixes should become reusable execution artifacts.</p>
             <dl>
-              <div class="row">
-                <dt>Pain</dt>
-                <dd>Prefill cost, KV transfer, hot-prefix recomputation.</dd>
-              </div>
-              <div class="row">
-                <dt>Lever</dt>
-                <dd>Content-addressed KV blocks and prefix-aware routing.</dd>
-              </div>
+              <div class="row"><dt>Pain</dt><dd>Prefill cost, KV transfer, hot-prefix recomputation.</dd></div>
+              <div class="row"><dt>Lever</dt><dd>Content-addressed KV blocks and prefix-aware routing.</dd></div>
             </dl>
           </article>
           <article class="card workload">
             <span class="kicker">02 / Recsys</span>
             <h3>Ads, feeds, ranking, and retrieval</h3>
-            <p>Ranking systems depend on huge embedding tables, sparse feature access, model sharding, and strict p99
-              latency.</p>
+            <p>Ranking systems depend on huge embedding tables, sparse feature access, model sharding, and strict p99 latency.</p>
             <dl>
-              <div class="row">
-                <dt>Pain</dt>
-                <dd>Random memory access, shard imbalance, tail utilization.</dd>
-              </div>
-              <div class="row">
-                <dt>Lever</dt>
-                <dd>Feature locality, hot embedding reuse, adaptive placement.</dd>
-              </div>
+              <div class="row"><dt>Pain</dt><dd>Random memory access, shard imbalance, tail utilization.</dd></div>
+              <div class="row"><dt>Lever</dt><dd>Feature locality, hot embedding reuse, adaptive placement.</dd></div>
             </dl>
           </article>
           <article class="card workload">
             <span class="kicker">03 / RAG</span>
             <h3>Embeddings and document pipelines</h3>
-            <p>Enterprise document workloads repeatedly embed, rerank, summarize, and prefix-cache the same corpus
-              fragments.</p>
+            <p>Enterprise document workloads repeatedly embed, rerank, summarize, and prefix-cache the same corpus fragments.</p>
             <dl>
-              <div class="row">
-                <dt>Pain</dt>
-                <dd>Duplicate preprocessing and repeated chunk inference.</dd>
-              </div>
-              <div class="row">
-                <dt>Lever</dt>
-                <dd>Hash-addressed embeddings, reranker outputs, summaries.</dd>
-              </div>
+              <div class="row"><dt>Pain</dt><dd>Duplicate preprocessing and repeated chunk inference.</dd></div>
+              <div class="row"><dt>Lever</dt><dd>Hash-addressed embeddings, reranker outputs, summaries.</dd></div>
             </dl>
           </article>
           <article class="card workload">
             <span class="kicker">04 / Model fleets</span>
             <h3>Adapters, LoRAs, and model variants</h3>
-            <p>Multi-tenant inference stacks waste memory and time on cold starts, fragmented variants, and poor
-              batching.</p>
+            <p>Multi-tenant inference stacks waste memory and time on cold starts, fragmented variants, and poor batching.</p>
             <dl>
-              <div class="row">
-                <dt>Pain</dt>
-                <dd>VRAM fragmentation, adapter churn, under-filled batches.</dd>
-              </div>
-              <div class="row">
-                <dt>Lever</dt>
-                <dd>Adapter-locality routing and compatible-batch scheduling.</dd>
-              </div>
+              <div class="row"><dt>Pain</dt><dd>VRAM fragmentation, adapter churn, under-filled batches.</dd></div>
+              <div class="row"><dt>Lever</dt><dd>Adapter-locality routing and compatible-batch scheduling.</dd></div>
             </dl>
           </article>
+        </div>
+      </section>
+
+      <section id="toy-model" aria-labelledby="toy-model-title">
+        <div class="section-head">
+          <h2 id="toy-model-title">Toy model: Bertlet Butterfly</h2>
+          <p class="section-copy">A falsifiable first demo: distill a frozen BERT-style teacher into many tiny shared-weight encoders over token blocks, then propagate block summaries through an FFT-style butterfly. The aim is not exact attention equivalence; it is a cached, distributed approximation that keeps BERT-like task quality while making cross-token communication logarithmic.</p>
+        </div>
+
+        <div class="grid cols-3">
+          <article class="card tall">
+            <span class="kicker">Baseline</span>
+            <h3>One dense BERT teacher</h3>
+            <p>Run a standard encoder over N tokens and use full self-attention in every layer. This is the quality target and the source of distillation labels, logits, and hidden-state targets.</p>
+            <div class="formula">attention/layer ≈ O(N² · d)<br />memory/layer ≈ O(N²)<br />artifact = whole sequence state</div>
+          </article>
+          <article class="card tall">
+            <span class="kicker">Decompose</span>
+            <h3>Many small Bertlets</h3>
+            <p>Split the sequence into B = N / b fixed-size blocks. Run the same small encoder on each b-token block. Cache every block output by model, tokenizer, block text, layer, precision, and config hash.</p>
+            <div class="formula">local work ≈ B · O(b² · d)<br />if b is fixed: O(N · b · d)<br />artifact = hash(block output)</div>
+          </article>
+          <article class="card tall">
+            <span class="kicker">Mix</span>
+            <h3>FFT-style summary exchange</h3>
+            <p>Each block emits s summary tokens. A butterfly network exchanges summaries across log₂B rounds, giving every block a path to every other block without materializing an N×N attention matrix.</p>
+            <div class="formula">global rounds = log₂B<br />summary work ≈ O(B · logB · s² · d)<br />target = O(N logN) communication</div>
+          </article>
+        </div>
+
+        <div class="matrix" aria-label="Bertlet Butterfly test design">
+          <div class="matrix-cell"><b>Concrete setting</b><span>N = 512 to 8,192 tokens; b = 32 or 64; B = 16 to 128 blocks; s = 2 to 8 summaries per block.</span></div>
+          <div class="matrix-cell"><b>Training signal</b><span>Hard labels plus KL distillation from teacher logits, optional hidden-state matching at selected layers, and contrastive loss for reranking tasks.</span></div>
+          <div class="matrix-cell"><b>Pass condition</b><span>Recover at least 97% of BERT-teacher task score on short contexts, exceed dense attention throughput on long contexts, and show cache-hit savings on repeated corpora.</span></div>
+          <div class="matrix-cell"><b>Fallback path</b><span>Route high-uncertainty examples, global-dependency-heavy tasks, or final rerank candidates back to the full teacher or a hybrid top-attention layer.</span></div>
+        </div>
+
+        <div class="flow" style="margin-top: 14px;">
+          <div class="step"><strong>Hash the inputs</strong><small>model snapshot, tokenizer, block text, block index, adapter, precision, runtime config.</small></div>
+          <div class="step"><strong>Run Bertlets in parallel</strong><small>each block is an independent work unit that can execute on cheap, local, or already-warm workers.</small></div>
+          <div class="step"><strong>Butterfly merge summaries</strong><small>round 1 mixes neighbors, round 2 mixes stride-2 blocks, round k mixes stride-2ᵏ blocks.</small></div>
+          <div class="step"><strong>Cache every intermediate</strong><small>block states, summary states, merge outputs, logits, embeddings, and receipts become reusable artifacts.</small></div>
+          <div class="step"><strong>Verify selectively</strong><small>spot-check cached artifacts by recomputation; compare output hashes, logits drift, and latency/cost deltas.</small></div>
         </div>
       </section>
 
       <section id="use-cases" aria-labelledby="use-cases-title">
         <div class="section-head">
           <h2 id="use-cases-title">Concrete use cases</h2>
-          <p class="section-copy">The runtime is intentionally narrow: it does not generate code or replace inference
-            engines. It decides what can be reused, where work should run, and how results are verified.</p>
+          <p class="section-copy">The runtime is intentionally narrow: it does not generate code or replace inference engines. It decides what can be reused, where work should run, and how results are verified.</p>
         </div>
         <div class="grid cols-3">
-          <article class="card compact">
-            <span class="kicker">KV cache</span>
-            <h3>Prefix-aware LLM router</h3>
-            <p>Route requests to workers already holding matching model, tokenizer, prompt-prefix, and KV-block state.
-            </p>
-          </article>
-          <article class="card compact">
-            <span class="kicker">Prefill / decode</span>
-            <h3>Disaggregated serving policy</h3>
-            <p>Choose whether prefill, decode, KV transfer, or cache reuse is cheapest for the current request shape.
-            </p>
-          </article>
-          <article class="card compact">
-            <span class="kicker">Ranking</span>
-            <h3>Embedding-shard scheduler</h3>
-            <p>Group ranking requests by sparse feature overlap, shard locality, model snapshot, and latency target.</p>
-          </article>
-          <article class="card compact">
-            <span class="kicker">Batch inference</span>
-            <h3>Reusable document work</h3>
-            <p>Cache embeddings, reranker scores, summaries, and model-prefix states for repeated document pipelines.
-            </p>
-          </article>
-          <article class="card compact">
-            <span class="kicker">Model variants</span>
-            <h3>Adapter placement</h3>
-            <p>Keep compatible LoRAs and fine-tunes close to shared base weights, warm replicas, and batchable traffic.
-            </p>
-          </article>
-          <article class="card compact">
-            <span class="kicker">Audit</span>
-            <h3>Recompute avoidance receipts</h3>
-            <p>Emit hashes, worker metadata, cache-hit evidence, latency, cost, and execution lineage for each result.
-            </p>
-          </article>
+          <article class="card compact"><span class="kicker">KV cache</span><h3>Prefix-aware LLM router</h3><p>Route requests to workers already holding matching model, tokenizer, prompt-prefix, and KV-block state.</p></article>
+          <article class="card compact"><span class="kicker">Prefill / decode</span><h3>Disaggregated serving policy</h3><p>Choose whether prefill, decode, KV transfer, or cache reuse is cheapest for the current request shape.</p></article>
+          <article class="card compact"><span class="kicker">Ranking</span><h3>Embedding-shard scheduler</h3><p>Group ranking requests by sparse feature overlap, shard locality, model snapshot, and latency target.</p></article>
+          <article class="card compact"><span class="kicker">Batch inference</span><h3>Reusable document work</h3><p>Cache embeddings, reranker scores, summaries, and model-prefix states for repeated document pipelines.</p></article>
+          <article class="card compact"><span class="kicker">Model variants</span><h3>Adapter placement</h3><p>Keep compatible LoRAs and fine-tunes close to shared base weights, warm replicas, and batchable traffic.</p></article>
+          <article class="card compact"><span class="kicker">Audit</span><h3>Recompute avoidance receipts</h3><p>Emit hashes, worker metadata, cache-hit evidence, latency, cost, and execution lineage for each result.</p></article>
         </div>
       </section>
 
       <section id="stack" aria-labelledby="stack-title">
         <div class="section-head">
           <h2 id="stack-title">Depth of the contemplated stack</h2>
-          <p class="section-copy">OVIR sits above execution engines and below applications: a scheduler,
-            content-addressed store, cache fabric, and verification layer that can integrate Ray, MAX, Mojo, ONNX,
-            Elixir, Nx, and REE-style receipts.</p>
+          <p class="section-copy">OVIR sits above execution engines and below applications: a scheduler, content-addressed store, cache fabric, and verification layer that can integrate Ray, MAX, Mojo, ONNX, Elixir, Nx, and REE-style receipts.</p>
         </div>
         <div class="stack" aria-label="Technology stack">
-          <div class="stack-item"><b>Distributed substrate</b>
-            <p>Ray tasks and actors; BEAM/Elixir supervision; Kubernetes or VM swarms for placement and failure
-              recovery.</p>
-          </div>
-          <div class="stack-item"><b>Execution engines</b>
-            <p>MAX, Mojo kernels, ONNX Runtime, vLLM, SGLang, Nx, Ortex, or other node-local inference backends.</p>
-          </div>
-          <div class="stack-item"><b>Content identity</b>
-            <p>Unison-inspired hash addressing for models, graph fragments, prompts, tensors, KV blocks, kernels, and
-              outputs.</p>
-          </div>
-          <div class="stack-item"><b>Cache fabric</b>
-            <p>CAS over local disks, object stores, GPU memory, CPU RAM, and network-transfer-aware KV movement.</p>
-          </div>
-          <div class="stack-item"><b>Receipts</b>
-            <p>Gensyn REE-inspired reproducibility boundary plus telemetry for what ran, what was reused, and what was
-              avoided.</p>
-          </div>
+          <div class="stack-item"><b>Distributed substrate</b><p>Ray tasks and actors; BEAM/Elixir supervision; Kubernetes or VM swarms for placement and failure recovery.</p></div>
+          <div class="stack-item"><b>Execution engines</b><p>MAX, Mojo kernels, ONNX Runtime, vLLM, SGLang, Nx, Ortex, or other node-local inference backends.</p></div>
+          <div class="stack-item"><b>Content identity</b><p>Unison-inspired hash addressing for models, graph fragments, prompts, tensors, KV blocks, kernels, and outputs.</p></div>
+          <div class="stack-item"><b>Cache fabric</b><p>CAS over local disks, object stores, GPU memory, CPU RAM, and network-transfer-aware KV movement.</p></div>
+          <div class="stack-item"><b>Receipts</b><p>Gensyn REE-inspired reproducibility boundary plus telemetry for what ran, what was reused, and what was avoided.</p></div>
         </div>
       </section>
 
       <section id="runtime" aria-labelledby="runtime-title">
         <div class="section-head">
           <h2 id="runtime-title">Runtime loop</h2>
-          <p class="section-copy">Every reusable fragment becomes an execution unit: deterministic where possible,
-            hashable by construction, schedulable by locality, and auditable after completion.</p>
+          <p class="section-copy">Every reusable fragment becomes an execution unit: deterministic where possible, hashable by construction, schedulable by locality, and auditable after completion.</p>
         </div>
         <div class="flow">
-          <div class="step"><strong>Normalize the request</strong><small>Model, weights, tokenizer, prompt, input
-              tensors, adapter, precision, runtime config.</small></div>
-          <div class="step"><strong>Derive execution units</strong><small>KV blocks, embedding lookups, graph
-              partitions, layer ranges, tensor shards, microbatches.</small></div>
-          <div class="step"><strong>Resolve from content store</strong><small>Return existing artifacts when hashes,
-              version constraints, and equivalence checks match.</small></div>
-          <div class="step"><strong>Place by locality</strong><small>Schedule work near cached weights, hot KV blocks,
-              embedding shards, adapter state, or cheaper hardware.</small></div>
-          <div class="step"><strong>Execute with backend adapters</strong><small>Use MAX, ONNX Runtime, vLLM, SGLang,
-              Nx, Mojo, or REE-wrapped workers where appropriate.</small></div>
-          <div class="step"><strong>Record lineage</strong><small>Persist output hashes, cache hits, transfers, worker
-              metadata, latency, and recomputation avoided.</small></div>
+          <div class="step"><strong>Normalize the request</strong><small>Model, weights, tokenizer, prompt, input tensors, adapter, precision, runtime config.</small></div>
+          <div class="step"><strong>Derive execution units</strong><small>KV blocks, embedding lookups, graph partitions, layer ranges, tensor shards, microbatches, Bertlet blocks.</small></div>
+          <div class="step"><strong>Resolve from content store</strong><small>Return existing artifacts when hashes, version constraints, and equivalence checks match.</small></div>
+          <div class="step"><strong>Place by locality</strong><small>Schedule work near cached weights, hot KV blocks, embedding shards, adapter state, or cheaper hardware.</small></div>
+          <div class="step"><strong>Execute with backend adapters</strong><small>Use MAX, ONNX Runtime, vLLM, SGLang, Nx, Mojo, or REE-wrapped workers where appropriate.</small></div>
+          <div class="step"><strong>Record lineage</strong><small>Persist output hashes, cache hits, transfers, worker metadata, latency, and recomputation avoided.</small></div>
         </div>
       </section>
 
       <section id="references" aria-labelledby="references-title">
         <div class="section-head">
           <h2 id="references-title">Reference map</h2>
-          <p class="section-copy">A small set of inspirations covering workloads, distributed execution, optimized
-            inference, content addressing, graph portability, and verifiable execution.</p>
+          <p class="section-copy">A small set of inspirations covering workloads, efficient token mixing, distributed execution, optimized inference, content addressing, graph portability, and verifiable execution.</p>
         </div>
         <div class="refs">
-          <a class="ref" href="https://github.com/metonymize-kripa/ovir"><span><b>OVIR repository</b><small>Project
-                home</small></span><span class="arrow">↗</span></a>
-          <a class="ref"
-            href="https://engineering.fb.com/2024/07/10/production-engineering/tail-utilization-ads-inference-meta/"><span><b>Meta
-                ads inference</b><small>Tail utilization and ranking workload pressure</small></span><span
-              class="arrow">↗</span></a>
-          <a class="ref"
-            href="https://newsletter.semianalysis.com/p/inferencex-v2-nvidia-blackwell-vs"><span><b>SemiAnalysis
-                InferenceX</b><small>LLM serving, prefill/decode, KV movement</small></span><span
-              class="arrow">↗</span></a>
-          <a class="ref" href="https://docs.ray.io/en/latest/ray-overview/use-cases.html"><span><b>Ray use
-                cases</b><small>Distributed tasks, actors, serving, batch inference</small></span><span
-              class="arrow">↗</span></a>
-          <a class="ref" href="https://www.modular.com/open-source/max"><span><b>Modular MAX</b><small>High-performance
-                GenAI serving and Mojo stack</small></span><span class="arrow">↗</span></a>
-          <a class="ref"
-            href="https://www.unison-lang.org/docs/the-big-idea/"><span><b>Unison</b><small>Content-addressed code and
-                dependency identity</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://onnx.ai/"><span><b>ONNX</b><small>Portable neural graph and operator
-                model</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://docs.gensyn.ai/tech/ree"><span><b>Gensyn REE</b><small>Reproducible execution
-                inspiration</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://docs.dynamo.nvidia.com/dynamo/getting-started/introduction"><span><b>NVIDIA
-                Dynamo</b><small>Distributed generative inference reference point</small></span><span
-              class="arrow">↗</span></a>
-          <a class="ref" href="https://github.com/elixir-nx/nx"><span><b>Elixir Nx</b><small>Tensor programming in
-                actor-friendly systems</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://github.com/metonymize-kripa/ovir"><span><b>OVIR repository</b><small>Project home</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://research.google/pubs/fnet-mixing-tokens-with-fourier-transforms/"><span><b>FNet</b><small>Fourier token mixing against BERT-style baselines</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://arxiv.org/abs/2307.02486"><span><b>LongNet</b><small>Linear complexity and logarithmic token dependency</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://arxiv.org/abs/2107.11906"><span><b>H-Transformer-1D</b><small>Hierarchical attention inspired by H-matrices</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://arxiv.org/abs/2006.04768"><span><b>Linformer</b><small>Low-rank self-attention approximation</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://engineering.fb.com/2024/07/10/production-engineering/tail-utilization-ads-inference-meta/"><span><b>Meta ads inference</b><small>Tail utilization and ranking workload pressure</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://newsletter.semianalysis.com/p/inferencex-v2-nvidia-blackwell-vs"><span><b>SemiAnalysis InferenceX</b><small>LLM serving, prefill/decode, KV movement</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://docs.ray.io/en/latest/ray-overview/use-cases.html"><span><b>Ray use cases</b><small>Distributed tasks, actors, serving, batch inference</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://www.modular.com/open-source/max"><span><b>Modular MAX</b><small>High-performance GenAI serving and Mojo stack</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://www.unison-lang.org/docs/the-big-idea/"><span><b>Unison</b><small>Content-addressed code and dependency identity</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://onnx.ai/"><span><b>ONNX</b><small>Portable neural graph and operator model</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://docs.gensyn.ai/tech/ree"><span><b>Gensyn REE</b><small>Reproducible execution inspiration</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://docs.dynamo.nvidia.com/dynamo/getting-started/introduction"><span><b>NVIDIA Dynamo</b><small>Distributed generative inference reference point</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://github.com/elixir-nx/nx"><span><b>Elixir Nx</b><small>Tensor programming in actor-friendly systems</small></span><span class="arrow">↗</span></a>
         </div>
       </section>
     </main>
 
     <footer>
       <span>OVIR — Opportunistic Verifiable Inference Runtime</span>
-      <span>Placeholder page. Source and updates on GitHub.</span>
+      <span>Concrete toy model added: BERT teacher → Bertlet Butterfly → cached distributed execution.</span>
     </footer>
   </div>
 </body>
