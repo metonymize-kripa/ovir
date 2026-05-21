@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>OVIR — Opportunistic Verifiable Inference Runtime</title>
   <meta name="description"
-    content="OVIR is a content-addressed inference control plane for high-volume neural workloads: split neural work into reusable chunks, merge compact summaries, and verify only the risky cases." />
+    content="OVIR optimizes one workload pattern: many short queries repeatedly executed against the same long context, with distributed chunk scoring, cached fallbacks, and verifiable receipts." />
   <meta property="og:title" content="OVIR — Opportunistic Verifiable Inference Runtime" />
   <meta property="og:description"
-    content="Content-addressed distributed inference for workloads where recomputation, cache locality, and data movement dominate cost." />
+    content="Distributed short-query / long-context inference for repeated corpora, cached fallbacks, and verifiable execution receipts." />
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#0d0f12" />
   <style>
@@ -19,7 +19,6 @@
       --muted: #626a75;
       --line: #d9d4c8;
       --card: #fffefa;
-      --soft: #eee9dd;
       --radius: 22px;
       --max: 1160px;
     }
@@ -105,14 +104,14 @@
       line-height: 0.92;
       letter-spacing: -0.08em;
       margin: 0;
-      max-width: 980px;
+      max-width: 1000px;
     }
 
     .lede {
       font-size: clamp(18px, 2.1vw, 24px);
       color: var(--muted);
       margin: 30px 0 0;
-      max-width: 880px;
+      max-width: 900px;
     }
 
     .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
@@ -174,7 +173,7 @@
 
     .section-copy {
       color: var(--muted);
-      max-width: 860px;
+      max-width: 880px;
       margin: 0;
       font-size: 17px;
     }
@@ -207,21 +206,6 @@
 
     .card h3 { margin: 0 0 10px; font-size: 18px; letter-spacing: -0.035em; }
     .card p { color: var(--muted); margin: 0; font-size: 15px; }
-
-    .workload { display: grid; grid-template-columns: 1fr; gap: 18px; }
-    .workload dl { display: grid; gap: 9px; margin: 18px 0 0; }
-
-    .workload div.row {
-      display: grid;
-      grid-template-columns: 72px 1fr;
-      gap: 10px;
-      align-items: start;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .workload dt { margin: 0; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
-    .workload dd { margin: 0; }
 
     .formula {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
@@ -262,7 +246,7 @@
     }
 
     .example h3 { margin: 0 0 10px; letter-spacing: -0.035em; }
-    .example p { color: var(--muted); margin: 0; max-width: 940px; }
+    .example p { color: var(--muted); margin: 0; max-width: 960px; }
 
     .flow { display: grid; gap: 10px; counter-reset: step; }
 
@@ -292,7 +276,7 @@
     }
 
     .step strong { letter-spacing: -0.02em; }
-    .step small { color: var(--muted); text-align: right; max-width: 520px; }
+    .step small { color: var(--muted); text-align: right; max-width: 560px; }
 
     .stack { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
 
@@ -360,10 +344,9 @@
         <span>OVIR</span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="#workloads">Workloads</a>
+        <a href="#fit">Workload fit</a>
         <a href="#how-it-works">How it works</a>
-        <a href="#why-believable">Why believable</a>
-        <a href="#use-cases">Use cases</a>
+        <a href="#fallbacks">Fallbacks</a>
         <a href="#stack">Stack</a>
         <a href="#references">References</a>
         <a href="https://github.com/metonymize-kripa/ovir">GitHub</a>
@@ -374,159 +357,129 @@
       <section class="hero" aria-labelledby="hero-title">
         <div>
           <p class="eyebrow">Opportunistic Verifiable Inference Runtime</p>
-          <h1 id="hero-title">Map-reduce for neural inference.</h1>
-          <p class="lede">OVIR turns repeated neural work into reusable chunks: split the input, run many small local encoders, merge compact summaries, reuse cached artifacts, and fall back to the full model only when confidence is low.</p>
+          <h1 id="hero-title">Short queries. Shared long contexts.</h1>
+          <p class="lede">OVIR targets one narrow pattern: many short queries repeatedly executed against the same long context. The runtime chunks the long context once, reuses chunk artifacts, routes cheap local work across many workers, and caches heavier fallback answers for future queries.</p>
           <div class="actions" aria-label="Project links">
             <a class="button primary" href="https://github.com/metonymize-kripa/ovir">View GitHub Repo</a>
-            <a class="button secondary" href="#how-it-works">See the toy model</a>
+            <a class="button secondary" href="#fit">Check workload fit</a>
           </div>
         </div>
         <aside class="panel" aria-label="Project summary">
           <div class="metric">
-            <div class="metric-row"><span class="metric-label">Toy workload</span><span class="metric-value">BERT-style reranking</span></div>
-            <div class="metric-row"><span class="metric-label">Divide step</span><span class="metric-value">Query + document chunks</span></div>
-            <div class="metric-row"><span class="metric-label">Conquer step</span><span class="metric-value">Local scores + summaries</span></div>
-            <div class="metric-row"><span class="metric-label">Safety valve</span><span class="metric-value">Uncertainty fallback</span></div>
+            <div class="metric-row"><span class="metric-label">Works best when</span><span class="metric-value">Short query + repeated corpus</span></div>
+            <div class="metric-row"><span class="metric-label">Does not claim</span><span class="metric-value">General transformer replacement</span></div>
+            <div class="metric-row"><span class="metric-label">Shortcut</span><span class="metric-value">Sparse local + global evidence</span></div>
+            <div class="metric-row"><span class="metric-label">Safety valve</span><span class="metric-value">Fallback + cached answer</span></div>
           </div>
         </aside>
       </section>
 
-      <section id="workloads" aria-labelledby="workloads-title">
+      <section id="fit" aria-labelledby="fit-title">
         <div class="section-head">
-          <h2 id="workloads-title">Workloads first</h2>
-          <p class="section-copy">The first target is not open-ended generation. It is high-volume inference where the same documents, prompts, embeddings, adapters, and ranking candidates are touched repeatedly.</p>
+          <h2 id="fit-title">The workload has to fit</h2>
+          <p class="section-copy">This is not magic. It is an optimization for workloads where a large shared context is queried many times, the query is short, most useful evidence is local or sparse, and the system can escalate when the shortcut is uncertain.</p>
         </div>
-        <div class="grid cols-4">
-          <article class="card workload">
-            <span class="kicker">01 / Reranking</span>
-            <h3>Query-document scoring</h3>
-            <p>Score thousands of candidate passages or documents without recomputing every token interaction from scratch.</p>
-            <dl><div class="row"><dt>Pain</dt><dd>Long inputs and repeated corpora.</dd></div><div class="row"><dt>Lever</dt><dd>Chunk-level encodings, summaries, and fallback.</dd></div></dl>
+        <div class="grid cols-3">
+          <article class="card tall">
+            <span class="kicker">Good fit</span>
+            <h3>Many questions over one corpus</h3>
+            <p>Legal discovery, contract review, enterprise knowledge bases, support archives, code search, clinical literature, compliance manuals, and due-diligence data rooms.</p>
+            <div class="formula">pattern = Q_short × C_long<br />same C queried repeatedly<br />chunk artifacts amortize over time</div>
           </article>
-          <article class="card workload">
-            <span class="kicker">02 / RAG</span>
-            <h3>Repeated document pipelines</h3>
-            <p>Enterprise corpora are embedded, reranked, summarized, and reused across many similar questions.</p>
-            <dl><div class="row"><dt>Pain</dt><dd>Duplicate preprocessing and repeated chunk inference.</dd></div><div class="row"><dt>Lever</dt><dd>Hash-addressed chunk artifacts.</dd></div></dl>
+          <article class="card tall">
+            <span class="kicker">Bad fit</span>
+            <h3>One-off dense reasoning</h3>
+            <p>Single-use prompts, creative generation, tasks where every token can depend on every other token, or cases where the long context changes faster than the cache can amortize.</p>
+            <div class="formula">pattern = unique Q × unique C<br />little reuse<br />fallback likely dominates</div>
           </article>
-          <article class="card workload">
-            <span class="kicker">03 / LLM serving</span>
-            <h3>Long-context prefix reuse</h3>
-            <p>Repeated system prompts, RAG context, agent history, and document prefixes should become reusable execution artifacts.</p>
-            <dl><div class="row"><dt>Pain</dt><dd>Prefill cost, KV transfer, hot-prefix recomputation.</dd></div><div class="row"><dt>Lever</dt><dd>Content-addressed KV blocks.</dd></div></dl>
+          <article class="card tall">
+            <span class="kicker">Borderline</span>
+            <h3>Hybrid routing required</h3>
+            <p>Some queries are easy and local; others require full global attention. OVIR should act as a triage layer, not as a forced approximation layer.</p>
+            <div class="formula">cheap path when confident<br />teacher path when uncertain<br />cache both outcomes</div>
           </article>
-          <article class="card workload">
-            <span class="kicker">04 / Recsys</span>
-            <h3>Ads, feeds, and ranking</h3>
-            <p>Ranking systems depend on huge embedding tables, sparse feature access, model sharding, and strict p99 latency.</p>
-            <dl><div class="row"><dt>Pain</dt><dd>Random memory access and tail utilization.</dd></div><div class="row"><dt>Lever</dt><dd>Feature locality and hot embedding reuse.</dd></div></dl>
-          </article>
+        </div>
+        <div class="matrix" aria-label="Workload pattern examples">
+          <div class="matrix-cell"><b>Input shape</b><span>One short query against thousands to millions of reusable long-context chunks.</span></div>
+          <div class="matrix-cell"><b>Query shape</b><span>Search, lookup, relevance, extraction, citation, classification, or reranking request.</span></div>
+          <div class="matrix-cell"><b>Context shape</b><span>Stable or slowly changing corpus where chunk embeddings, summaries, and fallback answers remain valid.</span></div>
+          <div class="matrix-cell"><b>Economic shape</b><span>Many future requests can reuse the same chunk work or the same fallback decision.</span></div>
         </div>
       </section>
 
       <section id="how-it-works" aria-labelledby="how-title">
         <div class="section-head">
-          <h2 id="how-title">Concrete toy model: chunk, score, merge</h2>
-          <p class="section-copy">Take a BERT-style query-document reranker. The dense baseline lets every token attend to every other token. OVIR replaces that first-pass scorer with a divide-and-conquer pipeline that can run across many workers and cache every intermediate.</p>
+          <h2 id="how-title">How the distributed shortcut works</h2>
+          <p class="section-copy">BigBird is the useful analogy: instead of allowing every token to attend to every token, preserve local windows, a small number of global summaries, and a sparse path for long-range evidence. OVIR turns that idea into a runtime pattern for repeated inference over shared contexts.</p>
         </div>
 
         <div class="example">
-          <h3>Example request</h3>
-          <p>Given one query and a 2,048-token document, decide whether the document is relevant. The system splits the document into 32 chunks of 64 tokens, prepends the query to each chunk, runs a tiny shared encoder on every chunk, and then merges the resulting summaries into one document-level score.</p>
+          <h3>Concrete example</h3>
+          <p>A user asks a 20-token question against a 2,000-page data room. OVIR does not run the full model over the whole room. It routes the query to cached chunk summaries, scores likely evidence chunks in parallel, merges the best local evidence, and escalates only if the local evidence is weak, conflicting, or globally ambiguous.</p>
         </div>
 
-        <div class="grid cols-3" style="margin-top: 14px;">
-          <article class="card tall">
-            <span class="kicker">1 / Divide</span>
-            <h3>Small local encoders</h3>
-            <p>Each chunk sees the query plus a small text window. This is where the parallelism happens: 32 chunk jobs can run on 32 workers, and repeated chunks can be skipped entirely from cache.</p>
-            <div class="formula">document = 32 × 64-token chunks<br />unit = hash(query, chunk, model, config)<br />cache hit = no neural work</div>
-          </article>
-          <article class="card tall">
-            <span class="kicker">2 / Conquer</span>
-            <h3>Local evidence packets</h3>
-            <p>Each worker emits a local relevance score, a few summary vectors, and an uncertainty estimate. The summary is not a full hidden state; it is the evidence needed by the next stage.</p>
-            <div class="formula">chunk output = score + summaries + uncertainty<br />summary count = 2–8 vectors<br />artifact = reusable receipt</div>
-          </article>
-          <article class="card tall">
-            <span class="kicker">3 / Merge</span>
-            <h3>Tree or butterfly reducer</h3>
-            <p>The merger combines neighboring summaries, then sections, then the whole document. This is the intuitive FFT-like part: information crosses the document in logarithmic rounds instead of one dense all-token matrix.</p>
-            <div class="formula">32 chunks → 16 → 8 → 4 → 2 → 1<br />merge rounds = log₂(chunks)<br />global work ≈ chunks × log(chunks)</div>
-          </article>
+        <div class="grid cols-4" style="margin-top: 14px;">
+          <article class="card compact"><span class="kicker">1 / Preprocess</span><h3>Chunk the context once</h3><p>Split the long context into stable chunks. Store hashes, embeddings, summaries, citations, and version metadata.</p></article>
+          <article class="card compact"><span class="kicker">2 / Query</span><h3>Fan out the short query</h3><p>Send the short query only to the relevant chunks or chunk clusters instead of the entire context.</p></article>
+          <article class="card compact"><span class="kicker">3 / Score</span><h3>Run local workers</h3><p>Each worker scores query-chunk relevance and emits local evidence, uncertainty, and a compact summary.</p></article>
+          <article class="card compact"><span class="kicker">4 / Merge</span><h3>Reduce sparse evidence</h3><p>A reducer combines local evidence into an answer, ranking, citation set, or escalation decision.</p></article>
         </div>
 
         <div class="flow" style="margin-top: 14px;">
-          <div class="step"><strong>Normalize the request</strong><small>same tokenizer, same model snapshot, same precision, same query text, same document chunk boundaries.</small></div>
-          <div class="step"><strong>Resolve cached chunks</strong><small>if the query-chunk pair has already been scored under the same config, reuse the stored score and summaries.</small></div>
-          <div class="step"><strong>Run missing chunks</strong><small>independent workers run the tiny encoder only for cache misses.</small></div>
-          <div class="step"><strong>Merge summaries</strong><small>a reducer combines local evidence into a document score and uncertainty estimate.</small></div>
-          <div class="step"><strong>Escalate risky cases</strong><small>ambiguous, adversarial, or global-dependency-heavy examples go to the full BERT teacher or a heavier reranker.</small></div>
-          <div class="step"><strong>Record the receipt</strong><small>persist hashes, cache hits, worker IDs, logits drift, latency, and fallback decision.</small></div>
+          <div class="step"><strong>Address the stable context</strong><small>hash every chunk by corpus version, tokenizer, model snapshot, adapter, precision, and runtime config.</small></div>
+          <div class="step"><strong>Reuse existing artifacts</strong><small>return cached embeddings, summaries, chunk scores, previous fallbacks, and receipts when constraints match.</small></div>
+          <div class="step"><strong>Distribute only the misses</strong><small>run query-chunk scoring on workers that already hold the right chunk, model, adapter, or cached summary.</small></div>
+          <div class="step"><strong>Merge with sparse global state</strong><small>combine local hits, a few global corpus summaries, and conflict checks instead of full all-token attention.</small></div>
+          <div class="step"><strong>Escalate when needed</strong><small>use the full model for globally dependent, contradictory, low-confidence, or high-value answers.</small></div>
+          <div class="step"><strong>Cache the escalation</strong><small>store the expensive answer, evidence set, model snapshot, and confidence decision so similar future queries are cheaper.</small></div>
         </div>
       </section>
 
-      <section id="why-believable" aria-labelledby="why-title">
+      <section id="fallbacks" aria-labelledby="fallbacks-title">
         <div class="section-head">
-          <h2 id="why-title">Why this is believable</h2>
-          <p class="section-copy">The claim is not that arbitrary intelligence decomposes cleanly. The narrower claim is that many production inference calls are local, repetitive, and tolerant of a cheap first-pass scorer backed by escalation.</p>
+          <h2 id="fallbacks-title">Fallbacks are part of the product</h2>
+          <p class="section-copy">The practical promise is not perfect approximation. The promise is a cheaper routing policy: answer the easy repeated cases from distributed cached evidence, identify the hard cases, pay for the full model, and reuse that expensive result later.</p>
         </div>
         <div class="grid cols-3">
-          <article class="card compact"><span class="kicker">Secret 01</span><h3>Most evidence is local</h3><p>For reranking, classification, extraction, and many RAG tasks, the decisive evidence often lives in a small span, not every pairwise token interaction.</p></article>
-          <article class="card compact"><span class="kicker">Secret 02</span><h3>Global context can be compressed</h3><p>The reducer only needs enough cross-chunk information to decide whether local evidence agrees, conflicts, or requires escalation.</p></article>
-          <article class="card compact"><span class="kicker">Secret 03</span><h3>The full model teaches the shortcut</h3><p>A frozen BERT teacher supplies labels, logits, hidden-state targets, and hard examples, so the small system learns what information must survive the split.</p></article>
-          <article class="card compact"><span class="kicker">Secret 04</span><h3>Cache changes the economics</h3><p>Once a chunk or query-chunk pair is scored, future requests reuse the artifact. The best win is avoiding work, not making every individual kernel faster.</p></article>
-          <article class="card compact"><span class="kicker">Secret 05</span><h3>Fallback protects quality</h3><p>The system does not need to replace BERT everywhere. It must cheaply handle easy/common cases and identify when dense attention is worth paying for.</p></article>
-          <article class="card compact"><span class="kicker">Secret 06</span><h3>Verification is targeted</h3><p>Receipts make it possible to recompute samples, detect drift, measure cache correctness, and quarantine unreliable workers or model variants.</p></article>
+          <article class="card compact"><span class="kicker">Trigger</span><h3>Low confidence</h3><p>Local scores are flat, evidence is weak, or the reducer cannot separate top candidates.</p></article>
+          <article class="card compact"><span class="kicker">Trigger</span><h3>Conflict</h3><p>Different chunks provide incompatible answers, requiring full-context reconciliation.</p></article>
+          <article class="card compact"><span class="kicker">Trigger</span><h3>Global dependency</h3><p>The query asks for comparison, synthesis, ordering, or reasoning across many distant spans.</p></article>
+          <article class="card compact"><span class="kicker">Cache</span><h3>Fallback answer</h3><p>Store the heavier model response, cited evidence, uncertainty score, and corpus version.</p></article>
+          <article class="card compact"><span class="kicker">Cache</span><h3>Fallback boundary</h3><p>Store which query patterns failed the shortcut so routing improves over time.</p></article>
+          <article class="card compact"><span class="kicker">Verify</span><h3>Receipts</h3><p>Record artifact hashes, worker IDs, cache hits, full-model calls, latency, cost, and drift checks.</p></article>
         </div>
-        <div class="matrix" aria-label="Practical test design">
-          <div class="matrix-cell"><b>Quality test</b><span>Measure the cheap scorer against the BERT teacher on reranking, classification, and long-document QA candidates.</span></div>
-          <div class="matrix-cell"><b>Throughput test</b><span>Compare dense BERT reranking against chunked scoring plus cached summaries over repeated corpora.</span></div>
-          <div class="matrix-cell"><b>Escalation test</b><span>Tune the uncertainty threshold until fallback captures the examples where chunking loses global information.</span></div>
-          <div class="matrix-cell"><b>Economic test</b><span>Report cost per accepted answer, not raw model FLOPs: cache hits, transfers avoided, latency, and teacher calls.</span></div>
-        </div>
-      </section>
-
-      <section id="use-cases" aria-labelledby="use-cases-title">
-        <div class="section-head">
-          <h2 id="use-cases-title">Concrete use cases</h2>
-          <p class="section-copy">The runtime is intentionally narrow: it does not generate code or replace inference engines. It decides what can be reused, where work should run, when to escalate, and how results are verified.</p>
-        </div>
-        <div class="grid cols-3">
-          <article class="card compact"><span class="kicker">Reranking</span><h3>Cheap first-pass scorer</h3><p>Score many candidates with chunked encoders, then send only uncertain or top-ranked candidates to a heavier reranker.</p></article>
-          <article class="card compact"><span class="kicker">RAG</span><h3>Reusable document work</h3><p>Cache embeddings, local scores, summaries, and model-prefix states for repeated document pipelines.</p></article>
-          <article class="card compact"><span class="kicker">KV cache</span><h3>Prefix-aware LLM router</h3><p>Route requests to workers already holding matching model, tokenizer, prompt-prefix, and KV-block state.</p></article>
-          <article class="card compact"><span class="kicker">Ranking</span><h3>Embedding-shard scheduler</h3><p>Group ranking requests by sparse feature overlap, shard locality, model snapshot, and latency target.</p></article>
-          <article class="card compact"><span class="kicker">Model variants</span><h3>Adapter placement</h3><p>Keep compatible LoRAs and fine-tunes close to shared base weights, warm replicas, and batchable traffic.</p></article>
-          <article class="card compact"><span class="kicker">Audit</span><h3>Recompute avoidance receipts</h3><p>Emit hashes, worker metadata, cache-hit evidence, fallback rate, latency, cost, and execution lineage for each result.</p></article>
+        <div class="matrix" aria-label="Success metrics">
+          <div class="matrix-cell"><b>Acceptance rate</b><span>Share of queries handled by cached sparse evidence without quality loss.</span></div>
+          <div class="matrix-cell"><b>Fallback rate</b><span>Share of queries routed to full-context or heavier model execution.</span></div>
+          <div class="matrix-cell"><b>Reuse rate</b><span>How often chunk artifacts or fallback responses are reused by later queries.</span></div>
+          <div class="matrix-cell"><b>Cost per accepted answer</b><span>Total runtime cost divided by answers accepted after fallback and verification.</span></div>
         </div>
       </section>
 
       <section id="stack" aria-labelledby="stack-title">
         <div class="section-head">
-          <h2 id="stack-title">Depth of the contemplated stack</h2>
-          <p class="section-copy">OVIR sits above execution engines and below applications: a scheduler, content-addressed store, cache fabric, and verification layer that can integrate Ray, MAX, Mojo, ONNX, Elixir, Nx, and REE-style receipts.</p>
+          <h2 id="stack-title">Runtime stack</h2>
+          <p class="section-copy">OVIR sits above inference engines and below applications: a scheduler, content-addressed store, cache fabric, sparse evidence reducer, fallback router, and receipt layer.</p>
         </div>
         <div class="stack" aria-label="Technology stack">
           <div class="stack-item"><b>Distributed substrate</b><p>Ray tasks and actors; BEAM/Elixir supervision; Kubernetes or VM swarms for placement and failure recovery.</p></div>
           <div class="stack-item"><b>Execution engines</b><p>MAX, Mojo kernels, ONNX Runtime, vLLM, SGLang, Nx, Ortex, or other node-local inference backends.</p></div>
-          <div class="stack-item"><b>Content identity</b><p>Hash addressing for models, graph fragments, prompts, tensors, summaries, KV blocks, kernels, and outputs.</p></div>
+          <div class="stack-item"><b>Content identity</b><p>Hash addressing for corpora, chunks, queries, embeddings, summaries, fallbacks, model snapshots, and outputs.</p></div>
           <div class="stack-item"><b>Cache fabric</b><p>CAS over local disks, object stores, GPU memory, CPU RAM, and network-transfer-aware KV movement.</p></div>
-          <div class="stack-item"><b>Receipts</b><p>Reproducibility boundary plus telemetry for what ran, what was reused, what escalated, and what was avoided.</p></div>
+          <div class="stack-item"><b>Receipts</b><p>Telemetry for what ran, what was reused, what escalated, what was verified, and what was avoided.</p></div>
         </div>
       </section>
 
       <section id="references" aria-labelledby="references-title">
         <div class="section-head">
           <h2 id="references-title">Reference map</h2>
-          <p class="section-copy">A small set of inspirations covering efficient token mixing, sparse/global attention, distributed execution, optimized inference, content addressing, graph portability, and verifiable execution.</p>
+          <p class="section-copy">A compact set of inspirations for sparse long-context inference, distributed execution, optimized serving, content addressing, graph portability, and verifiable execution.</p>
         </div>
         <div class="refs">
           <a class="ref" href="https://github.com/metonymize-kripa/ovir"><span><b>OVIR repository</b><small>Project home</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://research.google/pubs/fnet-mixing-tokens-with-fourier-transforms/"><span><b>FNet</b><small>Fourier token mixing against BERT-style baselines</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://arxiv.org/abs/2007.14062"><span><b>BigBird</b><small>Sparse long-context attention with local, random, and global paths</small></span><span class="arrow">↗</span></a>
           <a class="ref" href="https://arxiv.org/abs/2004.05150"><span><b>Longformer</b><small>Local windows plus task-motivated global attention</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://arxiv.org/abs/2007.14062"><span><b>BigBird</b><small>Sparse attention with local, random, and global tokens</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://arxiv.org/abs/2006.04768"><span><b>Linformer</b><small>Low-rank self-attention approximation</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://research.google/pubs/fnet-mixing-tokens-with-fourier-transforms/"><span><b>FNet</b><small>Token mixing without learned dense attention</small></span><span class="arrow">↗</span></a>
           <a class="ref" href="https://engineering.fb.com/2024/07/10/production-engineering/tail-utilization-ads-inference-meta/"><span><b>Meta ads inference</b><small>Tail utilization and ranking workload pressure</small></span><span class="arrow">↗</span></a>
           <a class="ref" href="https://newsletter.semianalysis.com/p/inferencex-v2-nvidia-blackwell-vs"><span><b>SemiAnalysis InferenceX</b><small>LLM serving, prefill/decode, KV movement</small></span><span class="arrow">↗</span></a>
           <a class="ref" href="https://docs.ray.io/en/latest/ray-overview/use-cases.html"><span><b>Ray use cases</b><small>Distributed tasks, actors, serving, batch inference</small></span><span class="arrow">↗</span></a>
@@ -535,14 +488,13 @@
           <a class="ref" href="https://onnx.ai/"><span><b>ONNX</b><small>Portable neural graph and operator model</small></span><span class="arrow">↗</span></a>
           <a class="ref" href="https://docs.gensyn.ai/tech/ree"><span><b>Gensyn REE</b><small>Reproducible execution inspiration</small></span><span class="arrow">↗</span></a>
           <a class="ref" href="https://docs.dynamo.nvidia.com/dynamo/getting-started/introduction"><span><b>NVIDIA Dynamo</b><small>Distributed generative inference reference point</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://github.com/elixir-nx/nx"><span><b>Elixir Nx</b><small>Tensor programming in actor-friendly systems</small></span><span class="arrow">↗</span></a>
         </div>
       </section>
     </main>
 
     <footer>
       <span>OVIR — Opportunistic Verifiable Inference Runtime</span>
-      <span>Grounded toy model: chunk, score, merge, cache, escalate, verify.</span>
+      <span>Scope: short-query / shared-long-context workloads with cached fallbacks.</span>
     </footer>
   </div>
 </body>
