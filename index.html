@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OVIR — Opportunistic Verifiable Inference Router</title>
+  <meta name="description" content="OVIR is a verifier-guided orchestration layer that avoids wasted AI inference compute by using cached work, formal methods, constrained small models, and large LLMs only when necessary." />
+  <meta property="og:title" content="OVIR — Opportunistic Verifiable Inference Router" />
+  <meta property="og:description" content="Use the cheapest valid path: cache, code, constrained small models, SMC search, then large LLMs only when necessary." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#0f1115" />
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --ink: #111318;
+      --muted: #5d6472;
+      --line: #d8d5cc;
+      --card: #ffffff;
+      --accent: #0f1115;
+      --accent-2: #f0eee7;
+      --radius: 22px;
+      --max: 1080px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top right, rgba(15, 17, 21, 0.08), transparent 32rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .wrap {
+      width: min(calc(100% - 40px), var(--max));
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    nav {
+      display: flex;
+      gap: 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    nav a:hover { color: var(--ink); }
+
+    main { padding: 42px 0 70px; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 48px;
+      align-items: end;
+      padding: 78px 0 54px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 12px;
+      font-weight: 700;
+      margin: 0 0 18px;
+    }
+
+    h1 {
+      font-size: clamp(46px, 8vw, 92px);
+      line-height: 0.92;
+      letter-spacing: -0.075em;
+      margin: 0;
+      max-width: 880px;
+    }
+
+    .lede {
+      font-size: clamp(18px, 2.2vw, 25px);
+      color: var(--muted);
+      margin: 28px 0 0;
+      max-width: 760px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: 0 20px 80px rgba(15, 17, 21, 0.06);
+    }
+
+    .metric {
+      display: grid;
+      gap: 14px;
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .metric-row:last-child { border-bottom: 0; padding-bottom: 0; }
+
+    .metric-label { color: var(--muted); }
+    .metric-value { font-weight: 750; text-align: right; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 34px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid var(--ink);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .button.primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .button.secondary {
+      background: transparent;
+      color: var(--ink);
+    }
+
+    section {
+      padding: 58px 0 0;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: 0.55fr 1.45fr;
+      gap: 34px;
+      align-items: start;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 34px);
+      letter-spacing: -0.055em;
+      line-height: 1.03;
+    }
+
+    .section-copy {
+      color: var(--muted);
+      max-width: 780px;
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.62);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      min-height: 178px;
+    }
+
+    .card span {
+      display: inline-block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      letter-spacing: -0.03em;
+    }
+
+    .card p {
+      color: var(--muted);
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .ladder {
+      counter-reset: step;
+      display: grid;
+      gap: 10px;
+    }
+
+    .step {
+      counter-increment: step;
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.54);
+    }
+
+    .step::before {
+      content: counter(step, decimal-leading-zero);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .step strong { letter-spacing: -0.02em; }
+    .step small { color: var(--muted); }
+
+    .refs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .ref {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 22px;
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.54);
+    }
+
+    .ref:hover { background: var(--card); }
+    .ref b { display: block; letter-spacing: -0.02em; }
+    .ref small { color: var(--muted); }
+    .arrow { color: var(--muted); }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 34px 0 44px;
+      color: var(--muted);
+      font-size: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    @media (max-width: 860px) {
+      header, footer { align-items: flex-start; flex-direction: column; }
+      nav { flex-wrap: wrap; }
+      .hero { grid-template-columns: 1fr; padding-top: 50px; }
+      .section-head { grid-template-columns: 1fr; gap: 12px; }
+      .grid, .refs { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 48px 1fr; }
+      .step small { grid-column: 2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="#top" aria-label="OVIR home">
+        <span class="mark">O</span>
+        <span>OVIR</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#model">Model</a>
+        <a href="#stack">Stack</a>
+        <a href="#references">References</a>
+        <a href="https://github.com/metonymize-kripa/ovir">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div>
+          <p class="eyebrow">Opportunistic Verifiable Inference Router</p>
+          <h1 id="hero-title">Stop spending frontier compute on tasks that do not need it.</h1>
+          <p class="lede">OVIR routes AI work through the cheapest valid path first: prior work, formal programs, constrained small models, SMC-guided search, and finally large LLMs only when necessary.</p>
+          <div class="actions" aria-label="Project links">
+            <a class="button primary" href="https://github.com/metonymize-kripa/ovir">View GitHub Repo</a>
+            <a class="button secondary" href="https://stride-ventures.com/ai-efficiency-challenge/">AI Efficiency Challenge</a>
+          </div>
+        </div>
+        <aside class="panel" aria-label="Project status">
+          <div class="metric">
+            <div class="metric-row"><span class="metric-label">Status</span><span class="metric-value">Placeholder / proposal</span></div>
+            <div class="metric-row"><span class="metric-label">Target</span><span class="metric-value">Inference waste</span></div>
+            <div class="metric-row"><span class="metric-label">Method</span><span class="metric-value">Verify, route, escalate</span></div>
+            <div class="metric-row"><span class="metric-label">Output</span><span class="metric-value">Useful answer + audit trail</span></div>
+          </div>
+        </aside>
+      </section>
+
+      <section id="model" aria-labelledby="model-title">
+        <div class="section-head">
+          <h2 id="model-title">Compute ladder</h2>
+          <p class="section-copy">OVIR treats large-model inference as a scarce resource. Each request climbs the ladder only when cheaper layers cannot produce a validated result.</p>
+        </div>
+        <div class="ladder">
+          <div class="step"><strong>Reuse prior verified work</strong><small>Search cached artifacts, successful executions, prior answers, and known-good transformations.</small></div>
+          <div class="step"><strong>Try deterministic synthesis</strong><small>Use parsers, schemas, type systems, SQL engines, planners, and executable templates before generation.</small></div>
+          <div class="step"><strong>Constrain small models</strong><small>Generate only inside formal languages such as JSON, SQL, Python ASTs, PDDL, or domain grammars.</small></div>
+          <div class="step"><strong>Run verifier-guided SMC</strong><small>Use cheap potentials early, expensive validators selectively, and resampling to focus compute on promising candidates.</small></div>
+          <div class="step"><strong>Escalate to large LLMs</strong><small>Call frontier-scale models only when uncertainty or validation failure justifies the cost.</small></div>
+          <div class="step"><strong>Emit evidence</strong><small>Attach validator traces, avoided-call metrics, cost/latency telemetry, and reproducible execution receipts where available.</small></div>
+        </div>
+      </section>
+
+      <section id="stack" aria-labelledby="stack-title">
+        <div class="section-head">
+          <h2 id="stack-title">Reference implementation shape</h2>
+          <p class="section-copy">The initial build should stay open, small, and measurable: a Python orchestrator, a cache, a validator registry, SMC-controlled generation, and a reproducibility layer for model calls.</p>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <span>01</span>
+            <h3>Router</h3>
+            <p>Classifies work by output type, validator availability, risk, and compute budget.</p>
+          </article>
+          <article class="card">
+            <span>02</span>
+            <h3>Validator registry</h3>
+            <p>Plugs in linters, unit tests, SQL execution, JSON Schema, PDDL validation, RDKit, and task-specific checks.</p>
+          </article>
+          <article class="card">
+            <span>03</span>
+            <h3>SMC controller</h3>
+            <p>Uses programmable potentials to guide generation and resample candidates before wasted completions accumulate.</p>
+          </article>
+          <article class="card">
+            <span>04</span>
+            <h3>Reuse layer</h3>
+            <p>Prioritizes content-addressed artifacts, semantic cache hits, and previously validated work products.</p>
+          </article>
+          <article class="card">
+            <span>05</span>
+            <h3>Model adapters</h3>
+            <p>Supports local open models first, then larger hosted models as explicit fallback paths.</p>
+          </article>
+          <article class="card">
+            <span>06</span>
+            <h3>Audit trail</h3>
+            <p>Reports accepted route, rejected routes, validation evidence, avoided large-model calls, and measured cost.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="references" aria-labelledby="references-title">
+        <div class="section-head">
+          <h2 id="references-title">Helpful references</h2>
+          <p class="section-copy">Core materials for the placeholder page, proposal, and first prototype.</p>
+        </div>
+        <div class="refs">
+          <a class="ref" href="https://github.com/metonymize-kripa/ovir"><span><b>OVIR repository</b><small>Project home</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://docs.gensyn.ai/tech/ree/examples"><span><b>Gensyn REE examples</b><small>Reproducible execution building block</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://docs.gensyn.ai/tech/ree"><span><b>Gensyn REE overview</b><small>Machine-agnostic reproducible inference</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://genlm.org/genlm-control/"><span><b>GenLM Control</b><small>Programmable constraints + SMC</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://github.com/genlm/genlm-control"><span><b>genlm-control GitHub</b><small>Open-source control library</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://arxiv.org/abs/2504.13139"><span><b>SMC constrained generation paper</b><small>Syntactic and semantic control of LLMs</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://stride-ventures.com/ai-efficiency-challenge/"><span><b>STRIDE AI Efficiency Challenge</b><small>Program overview</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://stride-ventures.com/stride-ventures-launches-ai-efficiency-challenge-to-accelerate-deployment-ready-innovations-in-u-s-ai-infrastructure/"><span><b>STRIDE launch announcement</b><small>Deployment-ready AI efficiency focus</small></span><span class="arrow">↗</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>OVIR — Opportunistic Verifiable Inference Router</span>
+      <span>Placeholder page. Source and updates on GitHub.</span>
+    </footer>
+  </div>
+</body>
+</html>
