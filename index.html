@@ -1,34 +1,43 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>OVIR — Opportunistic Verifiable Inference Runtime</title>
-  <meta name="description" content="OVIR is a content-addressed swarm runtime for reproducible, distributed neural network inference across many VMs." />
+  <meta name="description"
+    content="OVIR is a content-addressed inference control plane for high-volume neural workloads: KV cache reuse, recommendation ranking, embeddings, and distributed model serving." />
   <meta property="og:title" content="OVIR — Opportunistic Verifiable Inference Runtime" />
-  <meta property="og:description" content="A content-addressed swarm runtime for distributed, reproducible neural network execution." />
+  <meta property="og:description"
+    content="Content-addressed distributed inference for workloads where recomputation, cache locality, and data movement dominate cost." />
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#0d0f12" />
   <style>
     :root {
       --bg: #f7f5ef;
       --ink: #0d0f12;
-      --muted: #5d6470;
+      --muted: #626a75;
       --line: #d9d4c8;
       --card: #fffefa;
       --soft: #eee9dd;
+      --accent: #1f2937;
       --radius: 22px;
-      --max: 1120px;
+      --max: 1160px;
     }
 
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
       margin: 0;
       background:
-        radial-gradient(circle at 72% 6%, rgba(13, 15, 18, 0.10), transparent 28rem),
-        linear-gradient(180deg, rgba(255,255,255,0.38), transparent 22rem),
+        radial-gradient(circle at 78% 4%, rgba(13, 15, 18, 0.10), transparent 30rem),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.46), transparent 24rem),
         var(--bg);
       color: var(--ink);
       font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -36,7 +45,10 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    a { color: inherit; text-decoration: none; }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
     .wrap {
       width: min(calc(100% - 40px), var(--max));
@@ -55,7 +67,7 @@
       display: inline-flex;
       align-items: center;
       gap: 12px;
-      font-weight: 760;
+      font-weight: 780;
       letter-spacing: -0.045em;
     }
 
@@ -74,21 +86,25 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 20px;
+      gap: 18px;
       color: var(--muted);
       font-size: 14px;
     }
 
-    nav a:hover { color: var(--ink); }
+    nav a:hover {
+      color: var(--ink);
+    }
 
-    main { padding: 40px 0 72px; }
+    main {
+      padding: 40px 0 72px;
+    }
 
     .hero {
       display: grid;
-      grid-template-columns: 1.35fr 0.65fr;
-      gap: 48px;
+      grid-template-columns: 1.38fr 0.62fr;
+      gap: 44px;
       align-items: end;
-      padding: 78px 0 58px;
+      padding: 76px 0 56px;
       border-top: 1px solid var(--line);
       border-bottom: 1px solid var(--line);
     }
@@ -98,23 +114,23 @@
       text-transform: uppercase;
       letter-spacing: 0.14em;
       font-size: 12px;
-      font-weight: 780;
+      font-weight: 800;
       margin: 0 0 18px;
     }
 
     h1 {
-      font-size: clamp(46px, 8.4vw, 98px);
+      font-size: clamp(46px, 8.2vw, 96px);
       line-height: 0.92;
       letter-spacing: -0.08em;
       margin: 0;
-      max-width: 930px;
+      max-width: 960px;
     }
 
     .lede {
-      font-size: clamp(18px, 2.2vw, 25px);
+      font-size: clamp(18px, 2.1vw, 24px);
       color: var(--muted);
       margin: 30px 0 0;
-      max-width: 790px;
+      max-width: 830px;
     }
 
     .actions {
@@ -132,12 +148,19 @@
       padding: 0 18px;
       border-radius: 999px;
       border: 1px solid var(--ink);
-      font-weight: 730;
+      font-weight: 740;
       font-size: 14px;
     }
 
-    .button.primary { background: var(--ink); color: white; }
-    .button.secondary { background: transparent; color: var(--ink); }
+    .button.primary {
+      background: var(--ink);
+      color: white;
+    }
+
+    .button.secondary {
+      background: transparent;
+      color: var(--ink);
+    }
 
     .panel {
       background: rgba(255, 254, 250, 0.82);
@@ -147,7 +170,10 @@
       box-shadow: 0 20px 80px rgba(13, 15, 18, 0.06);
     }
 
-    .metric { display: grid; gap: 14px; }
+    .metric {
+      display: grid;
+      gap: 14px;
+    }
 
     .metric-row {
       display: flex;
@@ -158,15 +184,27 @@
       font-size: 14px;
     }
 
-    .metric-row:last-child { border-bottom: 0; padding-bottom: 0; }
-    .metric-label { color: var(--muted); }
-    .metric-value { font-weight: 760; text-align: right; }
+    .metric-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
 
-    section { padding: 58px 0 0; }
+    .metric-label {
+      color: var(--muted);
+    }
+
+    .metric-value {
+      font-weight: 770;
+      text-align: right;
+    }
+
+    section {
+      padding: 58px 0 0;
+    }
 
     .section-head {
       display: grid;
-      grid-template-columns: 0.58fr 1.42fr;
+      grid-template-columns: 0.55fr 1.45fr;
       gap: 34px;
       align-items: start;
       margin-bottom: 22px;
@@ -181,15 +219,26 @@
 
     .section-copy {
       color: var(--muted);
-      max-width: 800px;
+      max-width: 820px;
       margin: 0;
       font-size: 17px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
       gap: 14px;
+    }
+
+    .grid.cols-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .grid.cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid.cols-2 {
+      grid-template-columns: repeat(2, 1fr);
     }
 
     .card {
@@ -200,14 +249,18 @@
       min-height: 184px;
     }
 
-    .card span {
+    .card.compact {
+      min-height: 136px;
+    }
+
+    .card span.kicker {
       display: inline-block;
       color: var(--muted);
       font-size: 12px;
       font-weight: 820;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
     }
 
     .card h3 {
@@ -220,6 +273,50 @@
       color: var(--muted);
       margin: 0;
       font-size: 15px;
+    }
+
+    .card .label {
+      display: inline-flex;
+      margin-top: 18px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 730;
+      background: rgba(255, 255, 255, 0.44);
+    }
+
+    .workload {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .workload dl {
+      display: grid;
+      gap: 9px;
+      margin: 18px 0 0;
+    }
+
+    .workload div.row {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 10px;
+      align-items: start;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .workload dt {
+      margin: 0;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    .workload dd {
+      margin: 0;
     }
 
     .flow {
@@ -253,8 +350,41 @@
       color: var(--muted);
     }
 
-    .step strong { letter-spacing: -0.02em; }
-    .step small { color: var(--muted); text-align: right; }
+    .step strong {
+      letter-spacing: -0.02em;
+    }
+
+    .step small {
+      color: var(--muted);
+      text-align: right;
+      max-width: 420px;
+    }
+
+    .stack {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .stack-item {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: rgba(255, 254, 250, 0.62);
+      min-height: 148px;
+    }
+
+    .stack-item b {
+      display: block;
+      margin-bottom: 10px;
+      letter-spacing: -0.025em;
+    }
+
+    .stack-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
 
     .refs {
       display: grid;
@@ -273,10 +403,22 @@
       background: rgba(255, 254, 250, 0.62);
     }
 
-    .ref:hover { background: var(--card); }
-    .ref b { display: block; letter-spacing: -0.02em; }
-    .ref small { color: var(--muted); }
-    .arrow { color: var(--muted); }
+    .ref:hover {
+      background: var(--card);
+    }
+
+    .ref b {
+      display: block;
+      letter-spacing: -0.02em;
+    }
+
+    .ref small {
+      color: var(--muted);
+    }
+
+    .arrow {
+      color: var(--muted);
+    }
 
     footer {
       display: flex;
@@ -288,17 +430,59 @@
       border-top: 1px solid var(--line);
     }
 
+    @media (max-width: 1040px) {
+      .grid.cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .stack {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
     @media (max-width: 880px) {
-      header, footer { align-items: flex-start; flex-direction: column; }
-      nav { justify-content: flex-start; }
-      .hero { grid-template-columns: 1fr; padding-top: 50px; }
-      .section-head { grid-template-columns: 1fr; gap: 12px; }
-      .grid, .refs { grid-template-columns: 1fr; }
-      .step { grid-template-columns: 48px 1fr; align-items: start; }
-      .step small { grid-column: 2; text-align: left; }
+
+      header,
+      footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      nav {
+        justify-content: flex-start;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 50px;
+      }
+
+      .section-head {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .grid.cols-4,
+      .grid.cols-3,
+      .grid.cols-2,
+      .refs,
+      .stack {
+        grid-template-columns: 1fr;
+      }
+
+      .step {
+        grid-template-columns: 48px 1fr;
+        align-items: start;
+      }
+
+      .step small {
+        grid-column: 2;
+        text-align: left;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <header>
@@ -307,7 +491,9 @@
         <span>OVIR</span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="#architecture">Architecture</a>
+        <a href="#workloads">Workloads</a>
+        <a href="#use-cases">Use cases</a>
+        <a href="#stack">Stack</a>
         <a href="#runtime">Runtime</a>
         <a href="#references">References</a>
         <a href="https://github.com/metonymize-kripa/ovir">GitHub</a>
@@ -318,93 +504,233 @@
       <section class="hero" aria-labelledby="hero-title">
         <div>
           <p class="eyebrow">Opportunistic Verifiable Inference Runtime</p>
-          <h1 id="hero-title">Content-addressed inference across a swarm of machines.</h1>
-          <p class="lede">OVIR is a distributed runtime for neural network execution. It splits inference into reproducible, cacheable work units, dispatches them across many VMs, and avoids recomputation through content-addressed results.</p>
+          <h1 id="hero-title">Stop recomputing neural work.</h1>
+          <p class="lede">OVIR is a content-addressed execution control plane for high-volume inference workloads where
+            recomputation, cache locality, KV movement, embedding lookups, and tail latency dominate cost.</p>
           <div class="actions" aria-label="Project links">
             <a class="button primary" href="https://github.com/metonymize-kripa/ovir">View GitHub Repo</a>
-            <a class="button secondary" href="https://docs.gensyn.ai/tech/ree/examples">Gensyn REE Examples</a>
+            <a class="button secondary" href="#workloads">Target workloads</a>
           </div>
         </div>
-        <aside class="panel" aria-label="Project status">
+        <aside class="panel" aria-label="Project summary">
           <div class="metric">
-            <div class="metric-row"><span class="metric-label">Status</span><span class="metric-value">Placeholder / proposal</span></div>
-            <div class="metric-row"><span class="metric-label">Target</span><span class="metric-value">NN execution efficiency</span></div>
-            <div class="metric-row"><span class="metric-label">Compute model</span><span class="metric-value">Actor swarm</span></div>
-            <div class="metric-row"><span class="metric-label">Primitive</span><span class="metric-value">Content-addressed tensors</span></div>
+            <div class="metric-row"><span class="metric-label">Status</span><span class="metric-value">Placeholder /
+                proposal</span></div>
+            <div class="metric-row"><span class="metric-label">Primitive</span><span class="metric-value">Hash-addressed
+                work units</span></div>
+            <div class="metric-row"><span class="metric-label">Focus</span><span class="metric-value">LLM + ranking
+                inference</span></div>
+            <div class="metric-row"><span class="metric-label">Control plane</span><span
+                class="metric-value">Distributed scheduler + CAS</span></div>
           </div>
         </aside>
       </section>
 
-      <section id="architecture" aria-labelledby="architecture-title">
+      <section id="workloads" aria-labelledby="workloads-title">
         <div class="section-head">
-          <h2 id="architecture-title">Architecture</h2>
-          <p class="section-copy">No code generation. No agentic detours. OVIR focuses on execution: graph partitioning, cache reuse, pipeline parallelism, reproducible workers, and verifiable outputs.</p>
+          <h2 id="workloads-title">Workloads first</h2>
+          <p class="section-copy">OVIR starts where inference spend concentrates: repeated prefixes, large KV caches,
+            recommendation ranking, embeddings, adapter-heavy serving, and batch workflows that can reuse intermediate
+            neural computation.</p>
         </div>
-        <div class="flow">
-          <div class="step"><strong>Hash the request</strong><small>Model ID, weights digest, input tensors, decoding parameters, execution mode.</small></div>
-          <div class="step"><strong>Build an execution DAG</strong><small>Layers, tensor shards, KV-cache segments, microbatches, and pipeline stages.</small></div>
-          <div class="step"><strong>Check the swarm cache</strong><small>Skip any unit whose content-addressed result already exists.</small></div>
-          <div class="step"><strong>Dispatch actors</strong><small>Elixir-style processes supervise work across VMs, GPUs, and backends.</small></div>
-          <div class="step"><strong>Run reproducible kernels</strong><small>REE-like execution where determinism or reproducibility is required.</small></div>
-          <div class="step"><strong>Return receipts</strong><small>Artifact hashes, worker metadata, validator traces, latency, and cache-hit evidence.</small></div>
+        <div class="grid cols-4">
+          <article class="card workload">
+            <span class="kicker">01 / LLM serving</span>
+            <h3>Long-context KV and prefix reuse</h3>
+            <p>Repeated system prompts, RAG context, agent history, and document prefixes should become reusable
+              execution artifacts.</p>
+            <dl>
+              <div class="row">
+                <dt>Pain</dt>
+                <dd>Prefill cost, KV transfer, hot-prefix recomputation.</dd>
+              </div>
+              <div class="row">
+                <dt>Lever</dt>
+                <dd>Content-addressed KV blocks and prefix-aware routing.</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="card workload">
+            <span class="kicker">02 / Recsys</span>
+            <h3>Ads, feeds, ranking, and retrieval</h3>
+            <p>Ranking systems depend on huge embedding tables, sparse feature access, model sharding, and strict p99
+              latency.</p>
+            <dl>
+              <div class="row">
+                <dt>Pain</dt>
+                <dd>Random memory access, shard imbalance, tail utilization.</dd>
+              </div>
+              <div class="row">
+                <dt>Lever</dt>
+                <dd>Feature locality, hot embedding reuse, adaptive placement.</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="card workload">
+            <span class="kicker">03 / RAG</span>
+            <h3>Embeddings and document pipelines</h3>
+            <p>Enterprise document workloads repeatedly embed, rerank, summarize, and prefix-cache the same corpus
+              fragments.</p>
+            <dl>
+              <div class="row">
+                <dt>Pain</dt>
+                <dd>Duplicate preprocessing and repeated chunk inference.</dd>
+              </div>
+              <div class="row">
+                <dt>Lever</dt>
+                <dd>Hash-addressed embeddings, reranker outputs, summaries.</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="card workload">
+            <span class="kicker">04 / Model fleets</span>
+            <h3>Adapters, LoRAs, and model variants</h3>
+            <p>Multi-tenant inference stacks waste memory and time on cold starts, fragmented variants, and poor
+              batching.</p>
+            <dl>
+              <div class="row">
+                <dt>Pain</dt>
+                <dd>VRAM fragmentation, adapter churn, under-filled batches.</dd>
+              </div>
+              <div class="row">
+                <dt>Lever</dt>
+                <dd>Adapter-locality routing and compatible-batch scheduling.</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+      </section>
+
+      <section id="use-cases" aria-labelledby="use-cases-title">
+        <div class="section-head">
+          <h2 id="use-cases-title">Concrete use cases</h2>
+          <p class="section-copy">The runtime is intentionally narrow: it does not generate code or replace inference
+            engines. It decides what can be reused, where work should run, and how results are verified.</p>
+        </div>
+        <div class="grid cols-3">
+          <article class="card compact">
+            <span class="kicker">KV cache</span>
+            <h3>Prefix-aware LLM router</h3>
+            <p>Route requests to workers already holding matching model, tokenizer, prompt-prefix, and KV-block state.
+            </p>
+          </article>
+          <article class="card compact">
+            <span class="kicker">Prefill / decode</span>
+            <h3>Disaggregated serving policy</h3>
+            <p>Choose whether prefill, decode, KV transfer, or cache reuse is cheapest for the current request shape.
+            </p>
+          </article>
+          <article class="card compact">
+            <span class="kicker">Ranking</span>
+            <h3>Embedding-shard scheduler</h3>
+            <p>Group ranking requests by sparse feature overlap, shard locality, model snapshot, and latency target.</p>
+          </article>
+          <article class="card compact">
+            <span class="kicker">Batch inference</span>
+            <h3>Reusable document work</h3>
+            <p>Cache embeddings, reranker scores, summaries, and model-prefix states for repeated document pipelines.
+            </p>
+          </article>
+          <article class="card compact">
+            <span class="kicker">Model variants</span>
+            <h3>Adapter placement</h3>
+            <p>Keep compatible LoRAs and fine-tunes close to shared base weights, warm replicas, and batchable traffic.
+            </p>
+          </article>
+          <article class="card compact">
+            <span class="kicker">Audit</span>
+            <h3>Recompute avoidance receipts</h3>
+            <p>Emit hashes, worker metadata, cache-hit evidence, latency, cost, and execution lineage for each result.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="stack" aria-labelledby="stack-title">
+        <div class="section-head">
+          <h2 id="stack-title">Depth of the contemplated stack</h2>
+          <p class="section-copy">OVIR sits above execution engines and below applications: a scheduler,
+            content-addressed store, cache fabric, and verification layer that can integrate Ray, MAX, Mojo, ONNX,
+            Elixir, Nx, and REE-style receipts.</p>
+        </div>
+        <div class="stack" aria-label="Technology stack">
+          <div class="stack-item"><b>Distributed substrate</b>
+            <p>Ray tasks and actors; BEAM/Elixir supervision; Kubernetes or VM swarms for placement and failure
+              recovery.</p>
+          </div>
+          <div class="stack-item"><b>Execution engines</b>
+            <p>MAX, Mojo kernels, ONNX Runtime, vLLM, SGLang, Nx, Ortex, or other node-local inference backends.</p>
+          </div>
+          <div class="stack-item"><b>Content identity</b>
+            <p>Unison-inspired hash addressing for models, graph fragments, prompts, tensors, KV blocks, kernels, and
+              outputs.</p>
+          </div>
+          <div class="stack-item"><b>Cache fabric</b>
+            <p>CAS over local disks, object stores, GPU memory, CPU RAM, and network-transfer-aware KV movement.</p>
+          </div>
+          <div class="stack-item"><b>Receipts</b>
+            <p>Gensyn REE-inspired reproducibility boundary plus telemetry for what ran, what was reused, and what was
+              avoided.</p>
+          </div>
         </div>
       </section>
 
       <section id="runtime" aria-labelledby="runtime-title">
         <div class="section-head">
-          <h2 id="runtime-title">Runtime components</h2>
-          <p class="section-copy">The first prototype can stay small: an Elixir control plane, Nx-backed numerical workers, content-addressed storage, and a deterministic execution boundary inspired by REE.</p>
+          <h2 id="runtime-title">Runtime loop</h2>
+          <p class="section-copy">Every reusable fragment becomes an execution unit: deterministic where possible,
+            hashable by construction, schedulable by locality, and auditable after completion.</p>
         </div>
-        <div class="grid">
-          <article class="card">
-            <span>01</span>
-            <h3>Actor scheduler</h3>
-            <p>Supervises millions of small work units with Erlang/Elixir-style isolation, retries, backpressure, and failure recovery.</p>
-          </article>
-          <article class="card">
-            <span>02</span>
-            <h3>Tensor cache</h3>
-            <p>Stores content-addressed inputs, intermediate tensors, KV-cache blocks, logits, and final outputs.</p>
-          </article>
-          <article class="card">
-            <span>03</span>
-            <h3>Graph partitioner</h3>
-            <p>Divides the model execution graph across layer, tensor, batch, token, and pipeline dimensions.</p>
-          </article>
-          <article class="card">
-            <span>04</span>
-            <h3>Nx worker layer</h3>
-            <p>Uses Elixir numerical definitions and tensor backends for concurrent distributed execution.</p>
-          </article>
-          <article class="card">
-            <span>05</span>
-            <h3>REE boundary</h3>
-            <p>Wraps model calls or subgraph calls in reproducible containers when bitwise replay matters.</p>
-          </article>
-          <article class="card">
-            <span>06</span>
-            <h3>Verifier</h3>
-            <p>Compares hashes, receipts, output equivalence, timing telemetry, and cache-hit claims.</p>
-          </article>
+        <div class="flow">
+          <div class="step"><strong>Normalize the request</strong><small>Model, weights, tokenizer, prompt, input
+              tensors, adapter, precision, runtime config.</small></div>
+          <div class="step"><strong>Derive execution units</strong><small>KV blocks, embedding lookups, graph
+              partitions, layer ranges, tensor shards, microbatches.</small></div>
+          <div class="step"><strong>Resolve from content store</strong><small>Return existing artifacts when hashes,
+              version constraints, and equivalence checks match.</small></div>
+          <div class="step"><strong>Place by locality</strong><small>Schedule work near cached weights, hot KV blocks,
+              embedding shards, adapter state, or cheaper hardware.</small></div>
+          <div class="step"><strong>Execute with backend adapters</strong><small>Use MAX, ONNX Runtime, vLLM, SGLang,
+              Nx, Mojo, or REE-wrapped workers where appropriate.</small></div>
+          <div class="step"><strong>Record lineage</strong><small>Persist output hashes, cache hits, transfers, worker
+              metadata, latency, and recomputation avoided.</small></div>
         </div>
       </section>
 
       <section id="references" aria-labelledby="references-title">
         <div class="section-head">
-          <h2 id="references-title">Helpful references</h2>
-          <p class="section-copy">Core materials for the placeholder page, proposal, and first runtime prototype.</p>
+          <h2 id="references-title">Reference map</h2>
+          <p class="section-copy">A small set of inspirations covering workloads, distributed execution, optimized
+            inference, content addressing, graph portability, and verifiable execution.</p>
         </div>
         <div class="refs">
-          <a class="ref" href="https://github.com/metonymize-kripa/ovir"><span><b>OVIR repository</b><small>Project home</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://docs.gensyn.ai/tech/ree/examples"><span><b>Gensyn REE examples</b><small>Reproducible execution examples</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://docs.gensyn.ai/tech/ree"><span><b>Gensyn REE overview</b><small>Machine-agnostic model inference</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://www.gensyn.ai/ree"><span><b>REE product page</b><small>Receipts and validation context</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://github.com/elixir-nx/nx"><span><b>Elixir Nx</b><small>Tensors and numerical definitions</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://hexdocs.pm/nx/introduction.html"><span><b>Nx documentation</b><small>Tensor programming in Elixir</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://github.com/elixir-nx/axon"><span><b>Axon</b><small>Nx-powered neural networks</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://github.com/elixir-nx/bumblebee"><span><b>Bumblebee</b><small>Pre-trained neural networks in Elixir</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://github.com/elixir-nx/ortex"><span><b>Ortex</b><small>ONNX Runtime bindings for Elixir</small></span><span class="arrow">↗</span></a>
-          <a class="ref" href="https://stride-ventures.com/ai-efficiency-challenge/"><span><b>STRIDE AI Efficiency Challenge</b><small>Program overview</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://github.com/metonymize-kripa/ovir"><span><b>OVIR repository</b><small>Project
+                home</small></span><span class="arrow">↗</span></a>
+          <a class="ref"
+            href="https://engineering.fb.com/2024/07/10/production-engineering/tail-utilization-ads-inference-meta/"><span><b>Meta
+                ads inference</b><small>Tail utilization and ranking workload pressure</small></span><span
+              class="arrow">↗</span></a>
+          <a class="ref"
+            href="https://newsletter.semianalysis.com/p/inferencex-v2-nvidia-blackwell-vs"><span><b>SemiAnalysis
+                InferenceX</b><small>LLM serving, prefill/decode, KV movement</small></span><span
+              class="arrow">↗</span></a>
+          <a class="ref" href="https://docs.ray.io/en/latest/ray-overview/use-cases.html"><span><b>Ray use
+                cases</b><small>Distributed tasks, actors, serving, batch inference</small></span><span
+              class="arrow">↗</span></a>
+          <a class="ref" href="https://www.modular.com/open-source/max"><span><b>Modular MAX</b><small>High-performance
+                GenAI serving and Mojo stack</small></span><span class="arrow">↗</span></a>
+          <a class="ref"
+            href="https://www.unison-lang.org/docs/the-big-idea/"><span><b>Unison</b><small>Content-addressed code and
+                dependency identity</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://onnx.ai/"><span><b>ONNX</b><small>Portable neural graph and operator
+                model</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://docs.gensyn.ai/tech/ree"><span><b>Gensyn REE</b><small>Reproducible execution
+                inspiration</small></span><span class="arrow">↗</span></a>
+          <a class="ref" href="https://docs.dynamo.nvidia.com/dynamo/getting-started/introduction"><span><b>NVIDIA
+                Dynamo</b><small>Distributed generative inference reference point</small></span><span
+              class="arrow">↗</span></a>
+          <a class="ref" href="https://github.com/elixir-nx/nx"><span><b>Elixir Nx</b><small>Tensor programming in
+                actor-friendly systems</small></span><span class="arrow">↗</span></a>
         </div>
       </section>
     </main>
@@ -415,4 +741,5 @@
     </footer>
   </div>
 </body>
+
 </html>
