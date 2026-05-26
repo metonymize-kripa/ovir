@@ -1,0 +1,27 @@
+[project]
+name = "ovir"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Kripa Rajshekhar", email = "kripa@metonymize.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "cobweb-language-embedding",
+    "concept-formation>=0.3.9",
+    "dspy>=3.2.1",
+    "falkordb>=1.0.0",
+    "gliner>=0.2.26",
+    "numpy>=1.24.0",
+    "pysolr>=3.11.0",
+    "redis>=5.0.0",
+    "requests>=2.32.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+cobweb-language-embedding = { git = "https://github.com/Teachable-AI-Lab/cobweb-language-embedding.git" }

@@ -1,0 +1,29 @@
+services:
+  solr-keyword:
+    image: solr:10.0.0
+    ports:
+      - "8983:8983"
+    volumes:
+      - solr-data:/var/solr
+    command: solr-precreate ovir_corpus
+
+  solr-vector:
+    image: solr:10.0.0
+    ports:
+      - "8984:8983"
+    volumes:
+      - solr-nn-data:/var/solr
+    command: solr-precreate ovir_vectors
+
+  falkordb:
+    image: falkordb/falkordb:latest
+    ports:
+      - "6379:6379"
+      - "3000:3000"
+    volumes:
+      - falkordb-data:/data
+
+volumes:
+  solr-data:
+  solr-nn-data:
+  falkordb-data:
