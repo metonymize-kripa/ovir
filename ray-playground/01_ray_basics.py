@@ -14,7 +14,7 @@ Run: uv run 01_ray_basics.py
 import ray
 import time
 
-ray.init(runtime_env={"excludes": [".venv/"]})
+ray.init(runtime_env={"excludes": [".venv/", "pyproject.toml", "uv.lock"]})
 
 
 def slow_task(item_id: int) -> str:

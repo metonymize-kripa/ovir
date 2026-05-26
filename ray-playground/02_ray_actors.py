@@ -18,7 +18,7 @@ import ray
 import time
 import random
 
-ray.init(runtime_env={"excludes": [".venv/"]})
+ray.init(runtime_env={"excludes": [".venv/", "pyproject.toml", "uv.lock"]})
 
 
 # ── Stateful Actor — one instance, holds shared tree state ───────────────────

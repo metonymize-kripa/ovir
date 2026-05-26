@@ -25,7 +25,7 @@ import time
 import random
 from typing import List
 
-ray.init(runtime_env={"excludes": [".venv/"]})
+ray.init(runtime_env={"excludes": [".venv/", "pyproject.toml", "uv.lock"]})
 
 
 # ── Stateful sinks ────────────────────────────────────────────────────────────

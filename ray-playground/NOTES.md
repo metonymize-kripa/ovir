@@ -22,7 +22,7 @@ No Docker needed. Ray spins up a local cluster automatically.
 
 ## Key concepts
 
-**`runtime_env={"excludes": [".venv/"]}`** — required on `ray.init()`. Without it Ray auto-packages the working directory including the virtualenv, tries to reinstall all deps in each worker process, and fails or runs 4× slower than sequential.
+**`runtime_env={"excludes": [".venv/", "pyproject.toml", "uv.lock"]}`** — required on `ray.init()`. Without it Ray auto-packages the working directory, reads `pyproject.toml`, and reinstalls deps in every worker process. Excluding `pyproject.toml` and `uv.lock` prevents the per-worker venv setup entirely. Excluding `.venv/` keeps the bundle small.
 
 **`@ray.remote` function** — stateless, parallelisable. Right primitive for per-chunk GLiNER extraction and Ollama embedding calls.
 
