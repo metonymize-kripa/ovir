@@ -13,13 +13,13 @@
       --card: #fffefa;
       --radius: 22px;
       --max: 1160px;
-      
       --accent-blue: #1d6fa5;
       --accent-blue-bg: #e0f0fd;
       --accent-orange: #b45309;
       --accent-orange-bg: #fef3c7;
       --accent-green: #1d9e75;
       --accent-green-bg: #d8f3e8;
+      --accent-amber: #d97706;
     }
 
     * { box-sizing: border-box; }
@@ -28,8 +28,8 @@
     body {
       margin: 0;
       background:
-        radial-gradient(circle at 78% 4%, rgba(13, 15, 18, 0.05), transparent 30rem),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.46), transparent 24rem),
+        radial-gradient(circle at 78% 4%, rgba(13,15,18,0.05), transparent 30rem),
+        linear-gradient(180deg, rgba(255,255,255,0.46), transparent 24rem),
         var(--bg);
       color: var(--ink);
       font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -40,7 +40,6 @@
     a { color: inherit; text-decoration: none; }
     .wrap { width: min(calc(100% - 40px), var(--max)); margin: 0 auto; }
 
-    /* Header */
     header {
       display: flex;
       align-items: center;
@@ -55,30 +54,26 @@
 
     main { padding: 20px 0 72px; }
 
-    /* Layout */
     .sim-layout {
       display: grid;
-      grid-template-columns: 1fr 400px;
+      grid-template-columns: 1fr 420px;
       gap: 32px;
       align-items: start;
       margin-top: 24px;
     }
 
-    /* Top Copy */
     .section-head { margin-bottom: 24px; }
     h1 { font-size: clamp(32px, 4vw, 48px); line-height: 1.05; letter-spacing: -0.06em; margin: 0 0 16px 0; }
     .lede { font-size: 18px; color: var(--muted); margin: 0; max-width: 800px; }
 
-    /* Panels */
     .panel {
-      background: rgba(255, 254, 250, 0.82);
+      background: rgba(255,254,250,0.82);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 24px;
-      box-shadow: 0 12px 40px rgba(13, 15, 18, 0.03);
+      box-shadow: 0 12px 40px rgba(13,15,18,0.03);
     }
 
-    /* Grid Area */
     .grid-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; }
     .grid-title { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
     .grid-meta { font-size: 13px; color: var(--muted); font-family: ui-monospace, monospace; }
@@ -87,46 +82,106 @@
       display: grid;
       grid-template-columns: repeat(10, 1fr);
       gap: 6px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .chunk {
       aspect-ratio: 1;
       border-radius: 6px;
       background: var(--line);
-      border: 1px solid rgba(0,0,0,0.05);
+      border: 1.5px solid rgba(0,0,0,0.06);
       position: relative;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
-    /* Domain coloring */
-    .cat-0 { background: #e0e7ff; border-color: #c7d2fe; } /* Legal */
-    .cat-1 { background: #ffedd5; border-color: #fed7aa; } /* Financial */
-    .cat-2 { background: #fce7f3; border-color: #fbcfe8; } /* HR */
-    .cat-3 { background: #dcfce7; border-color: #bbf7d0; } /* Tech */
 
-    /* States */
-    .chunk.state-scan { background: var(--accent-blue); transform: scale(1.08); box-shadow: 0 4px 12px rgba(29, 111, 165, 0.3); z-index: 2; border-color: var(--accent-blue); }
-    .chunk.state-compute { background: var(--accent-orange); transform: scale(1.15); box-shadow: 0 6px 16px rgba(180, 83, 9, 0.3); z-index: 3; border-color: var(--accent-orange); }
-    .chunk.state-cache-hit { background: var(--accent-green); transform: scale(1.15); box-shadow: 0 6px 16px rgba(29, 158, 117, 0.3); z-index: 3; border-color: var(--accent-green); }
-    .chunk.state-cached { background: var(--accent-green-bg); border-color: var(--accent-green); opacity: 0.9; }
+    /* Domain base colors */
+    .cat-0 { background: #e0e7ff; border-color: #c7d2fe; }
+    .cat-1 { background: #ffedd5; border-color: #fed7aa; }
+    .cat-2 { background: #fce7f3; border-color: #fbcfe8; }
+    .cat-3 { background: #dcfce7; border-color: #bbf7d0; }
+
+    /* Active animation states — override domain */
+    .chunk.state-scan    { background: var(--accent-blue) !important; transform: scale(1.08); box-shadow: 0 4px 12px rgba(29,111,165,0.35); z-index: 2; border-color: var(--accent-blue) !important; }
+    .chunk.state-compute { background: var(--accent-orange) !important; transform: scale(1.15); box-shadow: 0 6px 16px rgba(180,83,9,0.35); z-index: 3; border-color: var(--accent-orange) !important; }
+    .chunk.state-cache-hit { background: var(--accent-green) !important; transform: scale(1.15); box-shadow: 0 6px 16px rgba(29,158,117,0.35); z-index: 3; border-color: var(--accent-green) !important; }
+
+    /* Warm = cached, preserves domain color, gains green border ring */
+    .chunk.warm {
+      border-color: var(--accent-green) !important;
+      box-shadow: inset 0 0 0 2px rgba(29,158,117,0.22), 0 0 0 0 transparent;
+      opacity: 1;
+    }
 
     .legend {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 14px;
       font-size: 12px;
       color: var(--muted);
       border-top: 1px solid var(--line);
-      padding-top: 16px;
+      padding-top: 14px;
     }
     .legend-item { display: flex; align-items: center; gap: 6px; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    /* Controls row */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      align-items: center;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid var(--ink);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--ink);
+      transition: background 0.18s;
+    }
+    .button.primary { background: var(--ink); color: white; }
+    .button.primary:hover { opacity: 0.88; }
+    .button:hover:not(.primary) { background: rgba(13,15,18,0.05); }
+    .button.active { background: var(--accent-green); border-color: var(--accent-green); color: white; }
+
+    /* Speed control */
+    .speed-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .speed-wrap input[type=range] {
+      -webkit-appearance: none;
+      width: 80px;
+      height: 4px;
+      background: var(--line);
+      border-radius: 99px;
+      outline: none;
+      cursor: pointer;
+    }
+    .speed-wrap input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--ink);
+    }
+    #speed-label { min-width: 40px; text-align: right; }
 
     /* Analysis Panel */
-    .analysis-block { margin-bottom: 24px; }
+    .analysis-block { margin-bottom: 22px; }
     .analysis-block:last-child { margin-bottom: 0; }
-    
+
     .kicker {
       display: block;
       color: var(--muted);
@@ -138,75 +193,80 @@
     }
 
     .query-box {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
-      padding: 14px;
-      background: rgba(13, 15, 18, 0.04);
+      padding: 12px 14px;
+      background: rgba(13,15,18,0.04);
       border-radius: 12px;
       border: 1px solid var(--line);
-      margin-bottom: 8px;
-      min-height: 52px;
+      min-height: 48px;
+      line-height: 1.4;
     }
 
-    /* Math Formulas */
+    /* Session stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 0;
+    }
+    .stat-cell {
+      background: rgba(13,15,18,0.03);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 10px 8px;
+      text-align: center;
+    }
+    .stat-val {
+      display: block;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .stat-val.good { color: var(--accent-green); }
+    .stat-val.warn { color: var(--accent-amber); }
+
+    /* Formula / math rows */
     .formula {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12px;
+      font-size: 11.5px;
       line-height: 1.6;
-      background: rgba(13, 15, 18, 0.045);
+      background: rgba(13,15,18,0.04);
       border: 1px solid var(--line);
       border-radius: 12px;
-      padding: 12px 16px;
+      padding: 10px 14px;
       margin-top: 8px;
     }
-
     .math-row {
       display: flex;
       justify-content: space-between;
-      border-bottom: 1px dashed rgba(13,15,18,0.1);
-      padding: 4px 0;
+      border-bottom: 1px dashed rgba(13,15,18,0.09);
+      padding: 3px 0;
     }
     .math-row:last-child { border-bottom: none; }
     .math-label { color: var(--muted); }
     .math-val { font-weight: 700; }
-    
     .val-bad { color: var(--accent-orange); }
     .val-good { color: var(--accent-green); }
 
     /* Chart */
     .chart-container {
-      margin-top: 16px;
-      height: 140px;
+      margin-top: 12px;
+      height: 150px;
       width: 100%;
       position: relative;
     }
-    canvas { width: 100%; height: 100%; }
-
-    /* Controls */
-    .controls {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-    }
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 44px;
-      padding: 0 20px;
-      border-radius: 999px;
-      border: 1px solid var(--ink);
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      background: transparent;
-      color: var(--ink);
-      transition: background 0.2s;
-    }
-    .button.primary { background: var(--ink); color: white; }
-    .button.primary:hover { opacity: 0.9; }
-    .button:hover:not(.primary) { background: rgba(13,15,18,0.05); }
-    .button.active { background: var(--accent-green); border-color: var(--accent-green); color: white; }
+    canvas { width: 100%; height: 100%; display: block; }
 
     @media (max-width: 960px) {
       .sim-layout { grid-template-columns: 1fr; }
@@ -222,16 +282,17 @@
         <span>OVIR.net</span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="index.html#fit">Fit</a>
-        <a href="index.html#network">Network</a>
+        <a href="index.html#workloads">Workloads</a>
+        <a href="index.html#pattern">Pattern</a>
         <a href="index.html#stack">Stack</a>
+        <a href="index.html">← Home</a>
       </nav>
     </header>
 
     <main>
       <div class="section-head">
-        <h1>Runtime caching analysis</h1>
-        <p class="lede">This simulates a 1,000,000 token context window (100 fragments of 10k tokens each). Watch how the theoretical compute cost drops as semantically overlapping queries populate the ETS fragment cache.</p>
+        <h1>Runtime caching simulation</h1>
+        <p class="lede">1,000,000-token context window — 100 fragments of 10k tokens. Watch compute cost collapse as semantically overlapping due-diligence queries warm the ETS fragment cache.</p>
       </div>
 
       <div class="sim-layout">
@@ -239,34 +300,62 @@
         <div class="panel">
           <div class="grid-header">
             <div class="grid-title">Addressable Context Graph</div>
-            <div class="grid-meta">100 fragments × 10,000 tokens</div>
+            <div class="grid-meta" id="q-num">—</div>
           </div>
-          
+
           <div class="chunk-grid" id="grid"></div>
 
           <div class="legend">
-            <div class="legend-item"><div class="legend-dot" style="background:#e0e7ff;border:1px solid #c7d2fe"></div> Legal</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#ffedd5;border:1px solid #fed7aa"></div> Financial</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#fce7f3;border:1px solid #fbcfe8"></div> HR</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#dcfce7;border:1px solid #bbf7d0"></div> Tech</div>
-            <div style="flex-basis: 100%; height: 0;"></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#e0e7ff;border:1.5px solid #c7d2fe"></div> Legal</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ffedd5;border:1.5px solid #fed7aa"></div> Financial</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fce7f3;border:1.5px solid #fbcfe8"></div> HR</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#dcfce7;border:1.5px solid #bbf7d0"></div> Tech</div>
+            <div style="flex-basis:100%;height:0"></div>
             <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div> Routed</div>
-            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-orange)"></div> Compute (Miss)</div>
-            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div> Reused (Hit)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-orange)"></div> Compute (miss)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div> Reused (hit)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#e0e7ff;border:1.5px solid var(--accent-green)"></div> Cached (warm)</div>
           </div>
 
           <div class="controls">
             <button class="button primary" id="btn-run" onclick="triggerQuery()">Run Next Query</button>
             <button class="button" id="btn-auto" onclick="toggleAuto()">Auto-play</button>
-            <button class="button" onclick="resetSim()">Reset State</button>
+            <button class="button" onclick="resetSim()">Reset</button>
+            <div class="speed-wrap">
+              <span>Speed</span>
+              <input type="range" id="speed-range" min="0" max="3" step="1" value="1" oninput="updateSpeed(this.value)" />
+              <span id="speed-label">1×</span>
+            </div>
           </div>
         </div>
 
         <!-- Right: Scientific Analysis -->
         <div class="panel">
           <div class="analysis-block">
-            <span class="kicker">Current Execution</span>
-            <div class="query-box" id="q-text">Awaiting network trigger...</div>
+            <span class="kicker">Current Query</span>
+            <div class="query-box" id="q-text">Awaiting network trigger…</div>
+          </div>
+
+          <div class="analysis-block">
+            <span class="kicker">Session Totals</span>
+            <div class="stats-row">
+              <div class="stat-cell">
+                <span class="stat-val" id="s-queries">0</span>
+                <span class="stat-label">Queries</span>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-val warn" id="s-cached">0/100</span>
+                <span class="stat-label">Cached</span>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-val good" id="s-hitrate">—</span>
+                <span class="stat-label">Hit Rate</span>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-val good" id="s-saved">—</span>
+                <span class="stat-label">Ops Saved</span>
+              </div>
+            </div>
           </div>
 
           <div class="analysis-block">
@@ -277,15 +366,15 @@
                 <span class="math-val" id="m-base">1,000,000²</span>
               </div>
               <div class="math-row">
-                <span class="math-label">Sparse Router (PEER) Extraction:</span>
+                <span class="math-label">Sparse Router (PEER) tokens:</span>
                 <span class="math-val" id="m-routed">—</span>
               </div>
               <div class="math-row">
-                <span class="math-label">Cache Hit Ratio:</span>
+                <span class="math-label">Cache Hit Ratio (this query):</span>
                 <span class="math-val" id="m-hitrate">—</span>
               </div>
               <div class="math-row">
-                <span class="math-label">Net New Compute (Tokens):</span>
+                <span class="math-label">Net New Compute (tokens):</span>
                 <span class="math-val val-bad" id="m-compute">—</span>
               </div>
               <div class="math-row">
@@ -296,7 +385,7 @@
           </div>
 
           <div class="analysis-block">
-            <span class="kicker">Amortized Sub-linear Cost</span>
+            <span class="kicker">Amortised Sub-linear Cost</span>
             <div class="chart-container">
               <canvas id="cost-chart"></canvas>
             </div>
@@ -307,221 +396,314 @@
   </div>
 
   <script>
-    // Configuration
-    const GRID_SIZE = 100; // 10x10
-    const TOKENS_PER_CHUNK = 10000;
-    const TOTAL_TOKENS = GRID_SIZE * TOKENS_PER_CHUNK;
-    
-    // 4 Domains: Legal (0), Financial (1), HR (2), Tech (3)
-    // Distributed logically: Left half Legal/HR, Right half Financial/Tech
-    const cellDomains = [];
-    for(let i=0; i<GRID_SIZE; i++) {
-      const col = i % 10;
-      const row = Math.floor(i / 10);
-      let cat;
-      if (col < 5 && row < 5) cat = 0; // Legal (Top Left)
-      else if (col >= 5 && row < 5) cat = 1; // Fin (Top Right)
-      else if (col < 5 && row >= 5) cat = 2; // HR (Bottom Left)
-      else cat = 3; // Tech (Bottom Right)
-      cellDomains.push(cat);
+    // ── Constants ────────────────────────────────────────────────────────────
+    const GRID_SIZE        = 100;
+    const TOKENS_PER_CHUNK = 10_000;
+    const TOTAL_TOKENS     = GRID_SIZE * TOKENS_PER_CHUNK; // 1,000,000
+    const N2_OPS           = TOTAL_TOKENS ** 2;            // 1 × 10^12
+
+    // Speed levels: [factor, label]
+    const SPEEDS = [
+      [0.35, '0.4×'],
+      [1.0,  '1×'],
+      [2.5,  '2.5×'],
+      [6.0,  'Turbo'],
+    ];
+    let speedFactor = 1.0;
+
+    const BASE = { stagger: 18, scanSettle: 320, evalSettle: 650, autoGap: 1600 };
+    const spd  = k => BASE[k] / speedFactor;
+
+    function updateSpeed(v) {
+      const [f, label] = SPEEDS[+v];
+      speedFactor = f;
+      document.getElementById('speed-label').textContent = label;
     }
 
-    // Queries mapped to domains to simulate realistic overlap
+    // ── Domain layout ────────────────────────────────────────────────────────
+    const cellDomains = [];
+    for (let i = 0; i < GRID_SIZE; i++) {
+      const col = i % 10, row = Math.floor(i / 10);
+      if      (col < 5 && row < 5) cellDomains.push(0); // Legal    — top-left
+      else if (col >= 5 && row < 5) cellDomains.push(1); // Financial — top-right
+      else if (col < 5 && row >= 5) cellDomains.push(2); // HR       — bottom-left
+      else                          cellDomains.push(3); // Tech     — bottom-right
+    }
+
+    // ── Workload ─────────────────────────────────────────────────────────────
     const WORKLOAD = [
-      { t: "Extract specific indemnification clauses and liability caps.", domains: [0, 1], sparseTokens: 150000 },
-      { t: "What are the engineering IP assignment conditions for contractors?", domains: [0, 3], sparseTokens: 120000 },
-      { t: "Are executive compensation plans tied to tech deliverables?", domains: [2, 3, 1], sparseTokens: 200000 },
-      { t: "List all open litigation involving our data pipeline architecture.", domains: [0, 3], sparseTokens: 180000 },
-      { t: "Identify severance packages for senior engineering staff.", domains: [2, 3], sparseTokens: 90000 },
-      { t: "Check non-compete bounds for the CFO and VP of Finance.", domains: [0, 2, 1], sparseTokens: 160000 },
-      { t: "Summarize the tax liabilities associated with IP transfer.", domains: [1, 0, 3], sparseTokens: 250000 },
-      { t: "Do the employment agreements cover remote engineering work?", domains: [2, 3], sparseTokens: 110000 }
+      { t: "Extract specific indemnification clauses and liability caps.",            domains: [0, 1], sparseTokens: 150_000 },
+      { t: "What are the engineering IP assignment conditions for contractors?",       domains: [0, 3], sparseTokens: 120_000 },
+      { t: "Are executive compensation plans tied to tech deliverables?",             domains: [2, 3, 1], sparseTokens: 200_000 },
+      { t: "List all open litigation involving our data pipeline architecture.",      domains: [0, 3], sparseTokens: 180_000 },
+      { t: "Identify severance packages for senior engineering staff.",               domains: [2, 3], sparseTokens: 90_000  },
+      { t: "Check non-compete bounds for the CFO and VP of Finance.",                 domains: [0, 2, 1], sparseTokens: 160_000 },
+      { t: "Summarise the tax liabilities associated with IP transfer.",              domains: [1, 0, 3], sparseTokens: 250_000 },
+      { t: "Do the employment agreements cover remote engineering work?",             domains: [2, 3], sparseTokens: 110_000 },
     ];
 
-    let cachedChunks = new Set();
-    let qCount = 0;
-    let isRunning = false;
-    let autoTimer = null;
-    let isAuto = false;
-    
-    // Metrics history for chart: [baseline cost, actual computed cost]
+    // ── State ─────────────────────────────────────────────────────────────────
+    const cachedChunks = new Set();
+    let qCount       = 0;
+    let isRunning    = false;
+    let autoTimer    = null;
+    let isAuto       = false;
+
+    // Session accumulators
+    let totalHits      = 0; // fragments that hit the cache across all queries
+    let totalRouted    = 0; // fragments routed (candidates examined) across all queries
+    let totalSparseOps = 0; // sum of sparseTokens² (cost without cache)
+    let totalActualOps = 0; // sum of computedTokens² (cost with cache)
+
+    // Chart history — each entry: { ovir: 0..1, sparseRatio: N2_OPS/sparseOps }
     const history = [];
 
-    // Initialize Grid
+    // ── Grid init ─────────────────────────────────────────────────────────────
     const gridEl = document.getElementById('grid');
-    for(let i=0; i<GRID_SIZE; i++) {
+    for (let i = 0; i < GRID_SIZE; i++) {
       const el = document.createElement('div');
       el.className = `chunk cat-${cellDomains[i]}`;
       el.id = `c${i}`;
       gridEl.appendChild(el);
     }
 
-    // Chart Setup
-    const ctx = document.getElementById('cost-chart').getContext('2d');
-    
+    // ── Chunk helpers ──────────────────────────────────────────────────────────
+    function setChunkState(id, cls) {
+      const el = document.getElementById(`c${id}`);
+      if (!el) return;
+      // Base is always cat-N; we append one optional state class
+      el.className = `chunk cat-${cellDomains[id]}${cls ? ' ' + cls : ''}`;
+    }
+
+    function setChunkWarm(id) {
+      // Warm: keep domain color, add green border via class
+      const el = document.getElementById(`c${id}`);
+      if (!el) return;
+      el.className = `chunk cat-${cellDomains[id]} warm`;
+    }
+
+    // ── Chart ─────────────────────────────────────────────────────────────────
+    const canvasEl = document.getElementById('cost-chart');
+    const ctx      = canvasEl.getContext('2d');
+
     function drawChart() {
-      const W = ctx.canvas.width = ctx.canvas.offsetWidth;
-      const H = ctx.canvas.height = ctx.canvas.offsetHeight;
-      ctx.clearRect(0,0,W,H);
-      
-      const pad = 20;
-      const pw = W - pad*2;
-      const ph = H - pad*2;
+      const W = canvasEl.width  = canvasEl.offsetWidth;
+      const H = canvasEl.height = canvasEl.offsetHeight;
+      ctx.clearRect(0, 0, W, H);
 
-      // Y axis (logarithmic feel)
-      ctx.strokeStyle = "rgba(13, 15, 18, 0.1)";
-      ctx.beginPath();
-      ctx.moveTo(pad, pad); ctx.lineTo(W-pad, pad); // 100%
-      ctx.moveTo(pad, pad + ph); ctx.lineTo(W-pad, pad + ph); // 0%
-      ctx.stroke();
+      const padL = 10, padR = 12, padT = 28, padB = 18;
+      const pw = W - padL - padR;
+      const ph = H - padT - padB;
 
-      if(history.length === 0) return;
-
-      const step = history.length > 1 ? pw / (history.length - 1) : 0;
-      
-      // Plot actual compute cost over time
-      ctx.beginPath();
-      ctx.strokeStyle = "#1d9e75"; // accent green
-      ctx.lineWidth = 3;
-      ctx.lineJoin = "round";
-      
-      history.forEach((val, i) => {
-        const x = pad + (i * step);
-        // val is % of sparse tokens computed vs full baseline O(N^2)
-        // Since O(N^2) is huge, we'll plot % of the *sparse* expectation.
-        // Actually, let's plot "Compute Operations" (1.0 = full 150k sparse compute, drops to 0 when 100% cached)
-        const y = pad + ph - (ph * val);
-        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-      });
-      ctx.stroke();
-
-      // Add points
-      history.forEach((val, i) => {
-        const x = pad + (i * step);
-        const y = pad + ph - (ph * val);
+      // ── grid lines ──
+      ctx.strokeStyle = 'rgba(13,15,18,0.08)';
+      ctx.lineWidth = 1;
+      [0, 0.5, 1].forEach(frac => {
+        const y = padT + ph * (1 - frac);
         ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI*2);
-        ctx.fillStyle = "#1d9e75";
-        ctx.fill();
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 2;
+        ctx.moveTo(padL, y);
+        ctx.lineTo(W - padR, y);
         ctx.stroke();
       });
+
+      // ── N² annotation (above chart) ──
+      let n2Text = 'N² full attention';
+      if (history.length > 0) {
+        const lastSparse = history[history.length - 1].sparseOps;
+        const ratio = Math.round(N2_OPS / lastSparse);
+        n2Text = `N² full attention ≈ ${ratio.toLocaleString()}× higher (off-scale ↑)`;
+      }
+      ctx.fillStyle = 'rgba(13,15,18,0.4)';
+      ctx.font = '10px ui-sans-serif, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(n2Text, padL, padT - 12);
+
+      // ── dashed amber line at 100%: sparse-only baseline ──
+      const yTop = padT; // 100% = top of chart area
+      ctx.save();
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padL, yTop);
+      ctx.lineTo(W - padR, yTop);
+      ctx.stroke();
+      ctx.restore();
+
+      // Label "sparse-only" at right
+      ctx.fillStyle = '#d97706';
+      ctx.font = '9px ui-sans-serif, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('sparse-only', W - padR, yTop - 3);
+
+      if (history.length === 0) return;
+
+      const step = history.length > 1 ? pw / (history.length - 1) : 0;
+
+      // ── OVIR actual line (solid green, declining) ──
+      ctx.save();
+      ctx.strokeStyle = '#1d9e75';
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([]);
+
+      // Filled area under the line
+      ctx.beginPath();
+      history.forEach(({ ovir }, i) => {
+        const x = padL + i * step;
+        const y = padT + ph * (1 - ovir);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      // Close path to bottom
+      ctx.lineTo(padL + (history.length - 1) * step, padT + ph);
+      ctx.lineTo(padL, padT + ph);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(29,158,117,0.10)';
+      ctx.fill();
+
+      // Draw the line itself
+      ctx.beginPath();
+      history.forEach(({ ovir }, i) => {
+        const x = padL + i * step;
+        const y = padT + ph * (1 - ovir);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.restore();
+
+      // Dots
+      history.forEach(({ ovir }, i) => {
+        const x = padL + i * step;
+        const y = padT + ph * (1 - ovir);
+        ctx.beginPath();
+        ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#1d9e75';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+
+      // Y-axis labels
+      ctx.fillStyle = 'rgba(13,15,18,0.35)';
+      ctx.font = '9px ui-monospace, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText('100%', padL + 26, padT + 3);
+      ctx.fillText('50%',  padL + 26, padT + ph * 0.5 + 3);
+      ctx.fillText('0%',   padL + 26, padT + ph + 3);
+
+      // X-axis label
+      ctx.textAlign = 'center';
+      ctx.fillText(`queries →`, padL + pw / 2, H - 2);
     }
-    
-    // Handle Window Resize for chart
+
     window.addEventListener('resize', drawChart);
     drawChart();
 
-    const delay = ms => new Promise(res => setTimeout(res, ms));
+    // ── Session stats ──────────────────────────────────────────────────────────
+    function updateSessionStats() {
+      document.getElementById('s-queries').textContent = qCount;
+      document.getElementById('s-cached').textContent  = `${cachedChunks.size}/100`;
 
-    function setChunkClass(id, cls) {
-      const el = document.getElementById(`c${id}`);
-      if(el) {
-        // preserve category base
-        el.className = `chunk cat-${cellDomains[id]} ${cls}`;
+      if (totalRouted > 0) {
+        const hr = (totalHits / totalRouted * 100).toFixed(0);
+        document.getElementById('s-hitrate').textContent = `${hr}%`;
+      }
+      if (totalSparseOps > 0) {
+        const saved = ((1 - totalActualOps / totalSparseOps) * 100).toFixed(0);
+        document.getElementById('s-saved').textContent = `${saved}%`;
       }
     }
 
+    // ── Delay helper ───────────────────────────────────────────────────────────
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    // ── Main query execution ───────────────────────────────────────────────────
     async function triggerQuery() {
-      if(isRunning) return;
+      if (isRunning) return;
       isRunning = true;
-      
+
       const q = WORKLOAD[qCount % WORKLOAD.length];
       qCount++;
-      
-      document.getElementById('q-text').textContent = q.t;
 
-      // 1. Determine Routed Chunks
-      const targetChunksCount = Math.floor(q.sparseTokens / TOKENS_PER_CHUNK);
-      const routedIds = [];
-      
-      // Pick random chunks from the requested domains
-      const availableInDomains = [];
-      for(let i=0; i<GRID_SIZE; i++) {
-        if(q.domains.includes(cellDomains[i])) availableInDomains.push(i);
+      document.getElementById('q-text').textContent  = q.t;
+      document.getElementById('q-num').textContent   = `Query ${qCount} of ${WORKLOAD.length * Math.ceil(qCount / WORKLOAD.length)}`;
+
+      // 1. Determine routed chunks (from target domains)
+      const targetCount = Math.max(1, Math.floor(q.sparseTokens / TOKENS_PER_CHUNK));
+      const pool = [];
+      for (let i = 0; i < GRID_SIZE; i++) {
+        if (q.domains.includes(cellDomains[i])) pool.push(i);
       }
-      
-      // Fisher-Yates shuffle to pick N
-      for(let i = availableInDomains.length - 1; i > 0; i--) {
+      // Fisher-Yates shuffle
+      for (let i = pool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [availableInDomains[i], availableInDomains[j]] = [availableInDomains[j], availableInDomains[i]];
+        [pool[i], pool[j]] = [pool[j], pool[i]];
       }
-      routedIds.push(...availableInDomains.slice(0, targetChunksCount));
+      const routedIds = pool.slice(0, Math.min(targetCount, pool.length));
 
-      // 2. Separate Hits and Misses
-      const hits = [];
-      const misses = [];
-      routedIds.forEach(id => {
-        if(cachedChunks.has(id)) hits.push(id);
-        else misses.push(id);
-      });
+      // 2. Split hits / misses
+      const hits   = routedIds.filter(id =>  cachedChunks.has(id));
+      const misses = routedIds.filter(id => !cachedChunks.has(id));
 
-      // Update Math UI - Step 1: Routing
-      document.getElementById('m-routed').textContent = `${q.sparseTokens.toLocaleString()} tokens`;
-      document.getElementById('m-hitrate').textContent = `Scanning...`;
-      document.getElementById('m-compute').textContent = `...`;
-      document.getElementById('m-saved').textContent = `...`;
+      // Update math display — scanning phase
+      document.getElementById('m-routed').textContent  = `${q.sparseTokens.toLocaleString()} tokens`;
+      document.getElementById('m-hitrate').textContent = 'Scanning…';
+      document.getElementById('m-compute').textContent = '…';
+      document.getElementById('m-saved').textContent   = '…';
 
-      // Animation: Scan
-      const stagger = 15;
-      for(let i=0; i<routedIds.length; i++) {
+      // 3. Animate: scan (blue flash on non-cached cells)
+      for (let i = 0; i < routedIds.length; i++) {
         setTimeout(() => {
-          if(!cachedChunks.has(routedIds[i])) setChunkClass(routedIds[i], 'state-scan');
-        }, i * stagger);
+          if (!cachedChunks.has(routedIds[i])) setChunkState(routedIds[i], 'state-scan');
+        }, i * spd('stagger'));
       }
-      await delay((routedIds.length * stagger) + 300);
+      await delay(routedIds.length * spd('stagger') + spd('scanSettle'));
 
-      // Update Math UI - Step 2: Hits/Misses
-      const hitRate = routedIds.length > 0 ? (hits.length / routedIds.length * 100) : 0;
-      document.getElementById('m-hitrate').textContent = `${hits.length} fragments (${hitRate.toFixed(1)}%)`;
+      // 4. Animate: evaluate — green flash for hits, orange for misses
+      const hitRate = routedIds.length > 0 ? hits.length / routedIds.length : 0;
+      document.getElementById('m-hitrate').textContent = `${hits.length} frags (${(hitRate * 100).toFixed(1)}%)`;
 
-      // Animation: Evaluate
-      hits.forEach(id => setChunkClass(id, 'state-cache-hit'));
-      misses.forEach(id => setChunkClass(id, 'state-compute'));
-      await delay(600);
+      hits.forEach(id   => setChunkState(id, 'state-cache-hit'));
+      misses.forEach(id => setChunkState(id, 'state-compute'));
+      await delay(spd('evalSettle'));
 
-      // Math Math UI - Step 3: Compute & Amortization
+      // 5. Math: compute cost
       const computedTokens = misses.length * TOKENS_PER_CHUNK;
-      document.getElementById('m-compute').textContent = `${computedTokens.toLocaleString()} tokens`;
-      
-      // The massive O(N^2) math:
-      // Let's say baseline compute = 1,000,000^2 = 1 trillion ops.
-      // Sparse PEER router limits context to say 150,000.
-      // 150,000^2 = 22.5 billion ops (already a ~97.7% reduction).
-      // But with cache, we only compute on misses. Say 30,000 tokens missed.
-      // 30,000^2 = 900 million ops.
-      // % of baseline = 900M / 1 Trillion = 0.09%
-      
-      const baselineOps = TOTAL_TOKENS * TOTAL_TOKENS;
-      const actualOps = computedTokens * computedTokens;
-      const pctOfBaseline = actualOps / baselineOps * 100;
-      
-      document.getElementById('m-saved').textContent = `< ${pctOfBaseline.toFixed(4)}% FLOPs`;
+      const sparseOps      = q.sparseTokens ** 2;
+      const actualOps      = computedTokens ** 2;
+      const pctOfBaseline  = actualOps / N2_OPS * 100;
 
-      // Update Chart History (we plot the ratio of actual ops vs max possible sparse ops for visual variance)
-      const maxSparseOps = (targetChunksCount * TOKENS_PER_CHUNK) ** 2;
-      const normalizedCompute = maxSparseOps > 0 ? (actualOps / maxSparseOps) : 0;
-      history.push(normalizedCompute);
-      if(history.length > 15) history.shift();
+      document.getElementById('m-compute').textContent = `${computedTokens.toLocaleString()} tokens`;
+      document.getElementById('m-saved').textContent   = `< ${pctOfBaseline.toFixed(4)}% FLOPs`;
+
+      // 6. Update session accumulators
+      totalHits      += hits.length;
+      totalRouted    += routedIds.length;
+      totalSparseOps += sparseOps;
+      totalActualOps += actualOps;
+      updateSessionStats();
+
+      // 7. Chart history
+      const ovir = sparseOps > 0 ? actualOps / sparseOps : 0;
+      history.push({ ovir, sparseOps });
+      if (history.length > 16) history.shift();
       drawChart();
 
-      // Animation: Commit to Cache
-      misses.forEach(id => {
-        cachedChunks.add(id);
-        setChunkClass(id, 'state-cached');
-      });
-      hits.forEach(id => setChunkClass(id, 'state-cached'));
+      // 8. Settle: commit misses to cache (warm), revert hits to warm
+      misses.forEach(id => { cachedChunks.add(id); setChunkWarm(id); });
+      hits.forEach(id   => setChunkWarm(id));
 
       isRunning = false;
     }
 
+    // ── Auto-play ─────────────────────────────────────────────────────────────
     function toggleAuto() {
       isAuto = !isAuto;
       const btn = document.getElementById('btn-auto');
-      if(isAuto) {
+      if (isAuto) {
         btn.classList.add('active');
-        btn.textContent = 'Pause Auto';
+        btn.textContent = 'Pause';
         runLoop();
       } else {
         btn.classList.remove('active');
@@ -531,34 +713,41 @@
     }
 
     async function runLoop() {
-      if(!isAuto) return;
+      if (!isAuto) return;
       await triggerQuery();
-      autoTimer = setTimeout(runLoop, 1500);
+      if (isAuto) autoTimer = setTimeout(runLoop, spd('autoGap'));
     }
 
+    // ── Reset ─────────────────────────────────────────────────────────────────
     function resetSim() {
       isAuto = false;
       clearTimeout(autoTimer);
       document.getElementById('btn-auto').classList.remove('active');
       document.getElementById('btn-auto').textContent = 'Auto-play';
-      
+      isRunning = false;
+
       cachedChunks.clear();
       qCount = 0;
+      totalHits = totalRouted = totalSparseOps = totalActualOps = 0;
       history.length = 0;
+
+      for (let i = 0; i < GRID_SIZE; i++) setChunkState(i, '');
+
+      document.getElementById('q-text').textContent   = 'Awaiting network trigger…';
+      document.getElementById('q-num').textContent    = '—';
+      document.getElementById('m-routed').textContent = '—';
+      document.getElementById('m-hitrate').textContent = '—';
+      document.getElementById('m-compute').textContent = '—';
+      document.getElementById('m-saved').textContent  = '—';
+      document.getElementById('s-queries').textContent = '0';
+      document.getElementById('s-cached').textContent  = '0/100';
+      document.getElementById('s-hitrate').textContent = '—';
+      document.getElementById('s-saved').textContent   = '—';
+
       drawChart();
-
-      for(let i=0; i<GRID_SIZE; i++) {
-        setChunkClass(i, '');
-      }
-
-      document.getElementById('q-text').textContent = "Awaiting network trigger...";
-      document.getElementById('m-routed').textContent = "—";
-      document.getElementById('m-hitrate').textContent = "—";
-      document.getElementById('m-compute').textContent = "—";
-      document.getElementById('m-saved').textContent = "—";
     }
 
-    // Initial draw
+    // Initial render
     drawChart();
   </script>
 </body>
