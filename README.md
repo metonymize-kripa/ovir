@@ -2,7 +2,7 @@
 
 Two-loop retrieval architecture. Expensive outer loop preprocesses the corpus once; cheap inner loop serves queries.
 
-**Outer loop** (offline, runs per corpus version): GLiNER entity extraction → FalkorDB graph build → COBWEB embedding index → Solr schema + indexing → DSPy trace generation via `qwen3.6:35b-mlx`.
+**Outer loop** (offline, runs per corpus version): GLiNER entity extraction → FalkorDB graph build → COBWEB embedding index → Solr schema + indexing → DSPy trace generation via `qwen3.6:35b-mlx`. Ray parallelises the per-chunk extraction and embedding steps.
 
 **Inner loop** (per query): COBWEB scope → FalkorDB graph traversal → Solr `fq` pre-filter → BM25 or KNN search → `gemma4:e4b` reads only scoped candidates → sufficiency check → escalate or return.
 
@@ -16,11 +16,11 @@ All models run locally via Ollama. No cloud dependencies.
 | Outer loop LM | `qwen3.6:35b-mlx` | Corpus prep, DSPy trace generation |
 | Embeddings | `nomic-embed-text` | COBWEB index, Solr KNN |
 
-Both LMs and the embedding model are already in `ollama ls`. No pulls needed.
+All three already in `ollama ls`. No pulls needed.
 
 ## Playgrounds
 
-Each subfolder is a self-contained `uv` environment. Run scripts with `uv run <script>.py`.
+Each subfolder is a self-contained `uv` environment. Run scripts with `uv run <script>.py`. See the `NOTES.md` in each folder for gotchas discovered during testing.
 
 ### `falkordb-playground/`
 Entity-chunk graph. Cypher queries, variable-length traversal, OVIR scope pattern.
@@ -38,6 +38,7 @@ Zero-shot NER with domain-specific label sets. Produces entity annotations and c
 uv run 01_basics.py        # extraction, threshold comparison, latency
 uv run 02_batch_corpus.py  # batch extraction → annotated_corpus.jsonl + entity_registry.json
 ```
+Note: `batch_predict_entities` is deprecated upstream; replacement is `GLiNER.inference`.
 
 ### `cobweb-playground/`
 Semantic routing via `CobwebRetriever` over nomic-embed-text embeddings. Produces chunk ID scope for Solr `fq`.
@@ -45,12 +46,13 @@ Semantic routing via `CobwebRetriever` over nomic-embed-text embeddings. Produce
 uv run 01_basics.py        # build retriever, query, cohesion check
 uv run 02_ovir_routing.py  # offline build + pickle, online query → scope IDs
 ```
+Note: `query()` returns `list[str]`, not `(score, text)` tuples. `concept-formation` caps at `0.3.9`.
 
 ### `solr-playground/`
 Keyword search, scoped `fq` queries, faceting, atomic updates. Solr 10.0.0.
 ```bash
 docker compose up -d
-uv run 01_schema_and_index.py
+uv run 01_schema_and_index.py   # adds copyField chunk_text → _text_ (required for keyword search)
 uv run 02_search.py
 uv run 03_updates_and_management.py
 ```
@@ -61,6 +63,7 @@ Dense vector search via `DenseVectorField` (768 dims, cosine). Scoped KNN and hy
 docker compose up -d
 uv run 01_vector_index.py
 ```
+Note: index corpus docs with explicit `chunk_id` field; pysolr returns stored text fields as single-element lists in Solr 10.
 
 ### `dspy-playground/`
 DSPy v3 signatures, modules, and BootstrapFewShot optimization. Teacher (`qwen3.6:35b-mlx`) generates traces; student (`gemma4:e4b`) is compiled with them baked in.
@@ -71,17 +74,26 @@ uv run 03_optimizer.py   # teacher/student split, compile → compiled_router.js
 ```
 
 ### `qwen-playground/`
-Inner and outer loop via Ollama's OpenAI-compatible endpoint. Entity extraction, thinking mode, JSON output, latency benchmark.
+Inner and outer loop via Ollama's OpenAI-compatible endpoint. Entity extraction, thinking mode, JSON output, latency benchmark. All access via Ollama — no HuggingFace downloads.
 ```bash
 uv run 01_ollama_basics.py
 ```
+
+### `ray-playground/`
+Parallel outer loop execution. `@ray.remote` functions for per-chunk GLiNER + embed, stateful Actors for FalkorDB/Solr/COBWEB sinks.
+```bash
+uv run 01_ray_basics.py         # sequential vs parallel: 8s → 1.6s
+uv run 02_ray_actors.py         # stateful Actor pattern, proper future collection
+uv run 03_ovir_ray_pipeline.py  # 50-chunk outer loop sim, ~24 chunks/s
+```
+Note: `ray.init(runtime_env={"excludes": [".venv/", "pyproject.toml", "uv.lock"]})` is required to prevent per-worker dep reinstall.
 
 ### `gensyn-playground/`
 Gensyn REE verifiable inference. Run/verify subprocess wrapper and receipt analysis stub.
 ```bash
 # Requires gensyn-ree Docker image
 uv run 01_run_and_receipt.py
-uv run 02_receipt_analysis.py
+uv run 02_receipt_analysis.py   # no Docker needed (uses stub receipts)
 ```
 
 ## Stack dependencies

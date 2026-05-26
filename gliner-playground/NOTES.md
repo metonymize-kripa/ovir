@@ -21,7 +21,7 @@ uv run 02_batch_corpus.py
 
 **Threshold is the recall/precision dial.** 0.4–0.5 for broad entity coverage (more graph nodes, more noise). 0.7+ for high-confidence entities only. OVIR recommendation: run at 0.45, store confidence on the MENTIONS edge, filter at query time.
 
-**`batch_predict_entities` vs `predict_entities`.** Batch processes multiple texts in one forward pass — roughly 3–5× faster for corpus prep. Always use batch for offline processing.
+**`batch_predict_entities` is deprecated — use `GLiNER.inference`.** The `batch_predict_entities` method still works but emits a `FutureWarning`. Replace with `model.inference(texts, entity_types=labels, threshold=t)` for forward compatibility. The scripts use the old API for now; update before the next major GLiNER release.
 
 **Normalize entity IDs.** `"ACME Corp"`, `"Acme Corp"`, `"ACME"` might all refer to the same entity. Normalize to a stable ID (`acme_corp`) before inserting into FalkorDB. The registry in `02_batch_corpus.py` handles this.
 

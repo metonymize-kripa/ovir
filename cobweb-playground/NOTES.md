@@ -20,6 +20,14 @@ uv run 02_ovir_routing.py
 
 **02_ovir_routing.py** — Full offline→online pipeline: embed corpus → build retriever → pickle → load → embed query → `retriever.query(query_emb, k)` → chunk IDs → Solr `fq`. Scope size vs. `k` tradeoff measurement.
 
+## Known issues / gotchas
+
+**`concept-formation` version cap.** The library pins to `>=0.3.9` — `0.4.0` does not exist on PyPI. `pyproject.toml` reflects this.
+
+**`query()` returns strings, not tuples.** The current `cobweb-language-embedding` API returns a plain `list[str]` — ranked chunk texts, no scores. Earlier versions returned `(score, text)` tuples. Iterate with `for chunk in results`, not `for score, chunk in results`.
+
+**Shallow clusters on small corpora.** With <20 chunks the COBWEB tree is too shallow to form tight topic clusters. Expect some cross-topic bleed in top-k results. Clusters sharpen significantly at 200+ chunks per topic.
+
 ## Key concepts
 
 **CobwebRetriever takes embeddings you provide.** No internal embedding model. Pass `corpus_embeddings` from nomic-embed-text (or any model). The retriever builds a COBWEB tree over the embedding space and returns chunks from the concept node most similar to the query embedding.

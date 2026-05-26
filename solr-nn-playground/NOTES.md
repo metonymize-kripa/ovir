@@ -1,7 +1,6 @@
 # Solr NN Playground
 
-Solr 9 DenseVectorField (HNSW) + nomic-embed-text via Ollama (768 dims). Runs on :8984 to avoid
-conflict with the keyword Solr playground on :8983.
+Solr 10.0.0 DenseVectorField (HNSW) + nomic-embed-text via Ollama (768 dims). Runs on :8984 to avoid conflict with the keyword Solr playground on :8983.
 
 ## Setup
 
@@ -23,6 +22,12 @@ uv run 01_vector_index.py
 **Hybrid scoring.** Solr doesn't natively combine BM25 and KNN scores. Options: (a) run both in Python and merge, (b) use Solr's `edismax` + `rrf` (Reciprocal Rank Fusion) for a lightweight blend, (c) wait for Solr's experimental hybrid scorer. The Python merge in `01_vector_index.py` is the simplest start.
 
 **Embedding model.** `nomic-embed-text` (768 dims) runs via Ollama — already in your `ollama ls`, no extra Python package. Calls go to `POST http://localhost:11434/api/embed` with batch input. Better quality than all-MiniLM-L6-v2 (384 dims) due to higher dimensionality and nomic's training data. Dimension change requires recreating the DenseVectorField schema.
+
+## Known issues / gotchas
+
+**Index corpus docs with `chunk_id` field explicitly.** Solr returns only the fields you request in `fl`. If `chunk_id` isn't present in the indexed document (only `id` is), KNN result dicts will be missing it. Always index both `"id"` and `"chunk_id"` with the same value.
+
+**pysolr returns stored text fields as lists.** In Solr 10, pysolr returns `stored=True` text fields as `["value"]` single-element lists, not bare strings. Unwrap with `text[0] if isinstance(text, list) else text` before display or downstream use.
 
 ## OVIR wiring
 

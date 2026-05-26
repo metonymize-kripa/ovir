@@ -1,6 +1,6 @@
 # Solr Playground
 
-pysolr 3.11.0 against Solr 9.
+pysolr 3.11.0 against Solr 10.0.0.
 
 ## Setup
 
@@ -21,6 +21,12 @@ uv run 03_updates_and_management.py
 **02_search.py** — Full-text search, `fq` scope filters, entity filtering, faceting, highlighting, date range. The `fq` pattern (FalkorDB scope → Solr filter) is the core OVIR search call.
 
 **03_updates_and_management.py** — Atomic updates (change one field), delete by ID/query, soft vs hard commit, index stats.
+
+## Known issues / gotchas
+
+**copyField required for bare keyword queries.** Solr's default search field is `_text_`, not `chunk_text`. Custom fields don't get copyField'd automatically. `01_schema_and_index.py` adds `copyField chunk_text → _text_` so bare keyword queries work. Without it, full-text searches return 0 hits.
+
+**Solr 10 upgrade.** Both Solr playgrounds moved from `solr:9` to `solr:10.0.0`. No API changes for the features used here — schema API, `fq`, `DenseVectorField`, and pysolr are unchanged.
 
 ## Key concepts
 
