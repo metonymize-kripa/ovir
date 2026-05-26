@@ -1,0 +1,13 @@
+[project]
+name = "pipeline"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "gliner>=0.2.26",
+    "cobweb-language-embedding @ git+https://github.com/Teachable-AI-Lab/cobweb-language-embedding.git",
+    "concept-formation>=0.3.9",
+    "falkordb>=1.0.0",
+    "pysolr>=3.11.0",
+    "requests>=2.32.0",
+    "numpy>=1.24.0",
+]

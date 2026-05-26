@@ -1,12 +1,17 @@
 # OVIR — Offline Verified Inference Retrieval
 
-Two-loop retrieval architecture. Expensive outer loop preprocesses the corpus once; cheap inner loop serves queries.
+## Overview
+OVIR is a fast, locally hosted two-loop retrieval architecture designed for verified inference. It splits the heavy lifting of unstructured text processing into an expensive offline "outer loop" and serves rapid, highly-scoped queries in an online "inner loop." 
 
-**Outer loop** (offline, runs per corpus version): GLiNER entity extraction → FalkorDB graph build → COBWEB embedding index → Solr schema + indexing → DSPy trace generation via `qwen3.6:35b-mlx`. Ray parallelises the per-chunk extraction and embedding steps.
+**Repository Stats:** ~4,000 lines of Python code, organized into self-contained component playgrounds and a unified pipeline. All models run locally via Ollama with zero cloud dependencies.
 
-**Inner loop** (per query): COBWEB scope → FalkorDB graph traversal → Solr `fq` pre-filter → BM25 or KNN search → `gemma4:e4b` reads only scoped candidates → sufficiency check → escalate or return.
+## Architecture
 
-All models run locally via Ollama. No cloud dependencies.
+**Outer loop** (offline, runs per corpus version): 
+GLiNER entity extraction → FalkorDB graph build → COBWEB embedding index → Solr schema + indexing → DSPy trace generation via `qwen3.6:35b-mlx`. Ray parallelises the per-chunk extraction and embedding steps.
+
+**Inner loop** (per query): 
+COBWEB scope → FalkorDB graph traversal → Solr `fq` pre-filter → BM25 or KNN search → `gemma4:e4b` reads only scoped candidates → sufficiency check → escalate or return.
 
 ## Models
 
@@ -17,6 +22,20 @@ All models run locally via Ollama. No cloud dependencies.
 | Embeddings | `nomic-embed-text` | COBWEB index, Solr KNN |
 
 All three already in `ollama ls`. No pulls needed.
+
+## Running on real data
+
+The `pipeline/` folder wires all components together into a single outer loop run against the CFPB corpus (`data/cfpb_corpus.jsonl`, 5000 synthetic complaint records).
+
+```bash
+# Prerequisites: FalkorDB running, Solr on :8983, Ollama running
+cd pipeline
+uv run 01_outer_loop.py              # GLiNER → embed → FalkorDB + COBWEB + Solr (100 chunks)
+uv run 01_outer_loop.py --chunks 500 # larger run
+uv run 02_query.py                   # COBWEB scope + FalkorDB traversal + Solr BM25/KNN
+```
+
+Expected outer loop timing at 100 chunks: ~15–25s total (GLiNER ~5s, embed ~2s, FalkorDB ~8s, Solr ~1s).
 
 ## Playgrounds
 
@@ -94,6 +113,13 @@ Gensyn REE verifiable inference. Run/verify subprocess wrapper and receipt analy
 # Requires gensyn-ree Docker image
 uv run 01_run_and_receipt.py
 uv run 02_receipt_analysis.py   # no Docker needed (uses stub receipts)
+```
+
+### `pipeline/`
+End-to-end outer loop on real CFPB data. Ties all components together: GLiNER → nomic embed → FalkorDB graph + COBWEB retriever + Solr index. Then inner loop query test with COBWEB scope + FalkorDB traversal + Solr BM25/KNN.
+```bash
+uv run 01_outer_loop.py   # builds all three indexes from cfpb_corpus.jsonl
+uv run 02_query.py        # tests retrieval against the built index
 ```
 
 ## Stack dependencies
