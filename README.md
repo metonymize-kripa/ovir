@@ -7,6 +7,8 @@ OVIR is a fast, locally hosted two-loop retrieval architecture designed for veri
 
 ## Architecture
 
+![OVIR Architecture](docs/architecture.svg)
+
 **Outer loop** (offline, runs per corpus version): 
 GLiNER entity extraction → FalkorDB graph build → COBWEB embedding index → Solr schema + indexing → DSPy trace generation via `qwen3.6:35b-mlx`. Ray parallelises the per-chunk extraction and embedding steps.
 
