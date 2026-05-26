@@ -1,0 +1,51 @@
+{
+  "route": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "augmented": true,
+        "query": "What is ACME's liability cap?",
+        "clusters": "contract_terms | financial_obligations | org_structure | compliance",
+        "cluster": "contract_terms"
+      },
+      {
+        "augmented": true,
+        "query": "How much does Globex charge annually?",
+        "clusters": "contract_terms | financial_obligations | org_structure | compliance",
+        "cluster": "financial_obligations"
+      },
+      {
+        "augmented": true,
+        "query": "Who is the CEO of Initech Holdings?",
+        "clusters": "contract_terms | financial_obligations | org_structure | compliance",
+        "cluster": "org_structure"
+      }
+    ],
+    "signature": {
+      "instructions": "Route a user query to the most relevant document cluster.\nReturn exactly one cluster label from the provided list.",
+      "fields": [
+        {
+          "prefix": "Query:",
+          "description": "${query}"
+        },
+        {
+          "prefix": "Clusters:",
+          "description": "Pipe-separated cluster labels"
+        },
+        {
+          "prefix": "Cluster:",
+          "description": "One cluster label from the list, exactly as written"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "3.2.1",
+      "cloudpickle": "3.1"
+    }
+  }
+}

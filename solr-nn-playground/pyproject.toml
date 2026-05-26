@@ -1,0 +1,10 @@
+[project]
+name = "solr-nn-playground"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "pysolr>=3.11.0",
+    "requests>=2.32.0",
+    "numpy>=1.24.0",
+]
+# Embeddings via Ollama nomic-embed-text (already in ollama ls) — no Python package needed.

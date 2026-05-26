@@ -1,0 +1,11 @@
+services:
+  solr:
+    image: solr:10.0.0
+    ports:
+      - "8984:8983"    # different port to avoid conflict with solr-playground
+    volumes:
+      - solr-nn-data:/var/solr
+    command: solr-precreate ovir_vectors
+
+volumes:
+  solr-nn-data:

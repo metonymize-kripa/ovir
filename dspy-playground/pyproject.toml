@@ -1,0 +1,7 @@
+[project]
+name = "dspy-playground"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "dspy>=3.2.1",
+]

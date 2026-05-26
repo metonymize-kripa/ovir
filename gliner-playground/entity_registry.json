@@ -1,0 +1,122 @@
+{
+  "acme_corp": {
+    "id": "acme_corp",
+    "name": "ACME Corp",
+    "type": "ORG"
+  },
+  "globex": {
+    "id": "globex",
+    "name": "Globex",
+    "type": "ORG"
+  },
+  "$2m": {
+    "id": "$2m",
+    "name": "$2M",
+    "type": "AMOUNT"
+  },
+  "msa": {
+    "id": "msa",
+    "name": "MSA",
+    "type": "LOCATION"
+  },
+  "12_months": {
+    "id": "12_months",
+    "name": "12 months",
+    "type": "AMOUNT"
+  },
+  "data_pipeline": {
+    "id": "data_pipeline",
+    "name": "data pipeline",
+    "type": "TECH"
+  },
+  "june_30,_2024": {
+    "id": "june_30,_2024",
+    "name": "June 30, 2024",
+    "type": "DATE"
+  },
+  "initech_holdings": {
+    "id": "initech_holdings",
+    "name": "Initech Holdings",
+    "type": "ORG"
+  },
+  "delaware": {
+    "id": "delaware",
+    "name": "Delaware",
+    "type": "LOCATION"
+  },
+  "$800m": {
+    "id": "$800m",
+    "name": "$800M",
+    "type": "AMOUNT"
+  },
+  "fy2023": {
+    "id": "fy2023",
+    "name": "FY2023",
+    "type": "DATE"
+  },
+  "bill_lumbergh": {
+    "id": "bill_lumbergh",
+    "name": "Bill Lumbergh",
+    "type": "PERSON"
+  },
+  "germany": {
+    "id": "germany",
+    "name": "Germany",
+    "type": "LOCATION"
+  },
+  "japan": {
+    "id": "japan",
+    "name": "Japan",
+    "type": "LOCATION"
+  },
+  "brazil": {
+    "id": "brazil",
+    "name": "Brazil",
+    "type": "LOCATION"
+  },
+  "either_party": {
+    "id": "either_party",
+    "name": "Either party",
+    "type": "PERSON"
+  },
+  "authservice": {
+    "id": "authservice",
+    "name": "AuthService",
+    "type": "TECH"
+  },
+  "tokenservice": {
+    "id": "tokenservice",
+    "name": "TokenService",
+    "type": "TECH"
+  },
+  "userdb": {
+    "id": "userdb",
+    "name": "UserDB",
+    "type": "TECH"
+  },
+  "redis": {
+    "id": "redis",
+    "name": "Redis",
+    "type": "TECH"
+  },
+  "jwt_tokens": {
+    "id": "jwt_tokens",
+    "name": "JWT tokens",
+    "type": "TECH"
+  },
+  "alice": {
+    "id": "alice",
+    "name": "Alice",
+    "type": "PERSON"
+  },
+  "bob": {
+    "id": "bob",
+    "name": "Bob",
+    "type": "PERSON"
+  },
+  "redis_cluster": {
+    "id": "redis_cluster",
+    "name": "Redis cluster",
+    "type": "TECH"
+  }
+}

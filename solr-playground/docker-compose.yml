@@ -1,0 +1,11 @@
+services:
+  solr:
+    image: solr:10.0.0
+    ports:
+      - "8983:8983"
+    volumes:
+      - solr-data:/var/solr
+    command: solr-precreate ovir_corpus
+
+volumes:
+  solr-data:
