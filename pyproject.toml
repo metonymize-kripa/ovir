@@ -25,3 +25,6 @@ build-backend = "hatchling.build"
 
 [tool.uv.sources]
 cobweb-language-embedding = { git = "https://github.com/Teachable-AI-Lab/cobweb-language-embedding.git" }
+
+[tool.uv.workspace]
+members = ["ray-playground"]

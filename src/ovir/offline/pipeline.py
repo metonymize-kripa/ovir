@@ -7,10 +7,10 @@ import requests
 import pysolr
 import pickle
 from pathlib import Path
-from gliner import GLiNER
 from falkordb import FalkorDB
 from redis.exceptions import ResponseError
 from cobweb_language_embedding import CobwebRetriever
+import ray
 
 OLLAMA_URL = "http://localhost:11434"
 EMBED_MODEL = "nomic-embed-text"
@@ -40,124 +40,56 @@ def embed(texts: list[str]) -> np.ndarray:
 def normalize_entity_id(name: str) -> str:
     return name.lower().strip().replace(" ", "_").replace(".", "")
 
-class OfflinePipeline:
+
+# --- Stateful Actors ---
+
+@ray.remote
+class FalkorActor:
     def __init__(self):
-        self.gliner = GLiNER.from_pretrained("urchade/gliner_medium-v2.1")
         self.db = FalkorDB(host="localhost", port=6379)
-        self.solr_keyword = pysolr.Solr(SOLR_KEYWORD_URL, always_commit=False, timeout=30)
-        self.solr_vector = pysolr.Solr(SOLR_VECTOR_URL, always_commit=False, timeout=30)
+        self.g = self.db.select_graph("ovir_corpus")
+        self.ingested = 0
 
-    def _wait_for_services(self):
-        print("Waiting for Solr services...")
-        for url in [SOLR_KEYWORD_URL, SOLR_VECTOR_URL]:
-            for _ in range(15):
-                try:
-                    requests.get(f"{url}/admin/ping")
-                    break
-                except Exception:
-                    time.sleep(2)
-            else:
-                raise RuntimeError(f"Solr not ready at {url}")
-        print("Services ready.")
-
-    def run(self, corpus: list[dict]):
-        """
-        Runs the full offline preprocessing pipeline over a list of chunks.
-        corpus format: [{"id": "...", "source": "...", "text": "..."}]
-        """
-        self._wait_for_services()
-
-        print("\n=== 1. GLiNER Entity Extraction ===")
-        texts = [c["text"] for c in corpus]
-        t0 = time.perf_counter()
-        batch_results = self.gliner.batch_predict_entities(texts, LABELS, threshold=0.45)
-        print(f"Extraction done in {(time.perf_counter() - t0) * 1000:.0f}ms")
-
-        annotated_chunks = []
-        for chunk, entities in zip(corpus, batch_results):
-            chunk_entities = []
-            for e in entities:
-                eid = normalize_entity_id(e["text"])
-                etype = {"organization": "ORG", "person": "PERSON", "location": "LOCATION",
-                         "date": "DATE", "monetary_amount": "AMOUNT", "product": "PRODUCT",
-                         "technology": "TECH"}.get(e["label"], e["label"].upper())
-                chunk_entities.append({
-                    "entity_id": eid, "entity_name": e["text"], "entity_type": etype,
-                    "confidence": round(e["score"], 4)
-                })
-            annotated_chunks.append({
-                "chunk_id": chunk["id"], "source": chunk["source"], "text": chunk["text"],
-                "entities": chunk_entities
-            })
-
-        print("\n=== 2. FalkorDB Graph Ingestion ===")
+    def clear_graph(self):
         try:
             self.db.select_graph("ovir_corpus").delete()
         except ResponseError:
             pass
-        g = self.db.select_graph("ovir_corpus")
+        self.g = self.db.select_graph("ovir_corpus")
 
-        for ac in annotated_chunks:
-            g.query(
-                "MERGE (c:Chunk {id: $id}) SET c.text = $text, c.source = $source, c.hash = $hash",
-                {"id": ac["chunk_id"], "text": ac["text"], "source": ac["source"],
-                 "hash": hashlib.md5(ac["text"].encode()).hexdigest()[:8]}
+    def ingest(self, chunk: dict, entities: list):
+        cid = chunk["id"]
+        # Merge chunk
+        self.g.query(
+            "MERGE (c:Chunk {id: $id}) SET c.text = $text, c.source = $source, c.hash = $hash",
+            {"id": cid, "text": chunk["text"], "source": chunk["source"],
+             "hash": hashlib.md5(chunk["text"].encode()).hexdigest()[:8]}
+        )
+        # Merge entities
+        for ent in entities:
+            self.g.query(
+                "MERGE (e:Entity {id: $id}) SET e.name = $name, e.type = $type",
+                {"id": ent["entity_id"], "name": ent["entity_name"], "type": ent["entity_type"]}
             )
-            for ent in ac["entities"]:
-                g.query(
-                    "MERGE (e:Entity {id: $id}) SET e.name = $name, e.type = $type",
-                    {"id": ent["entity_id"], "name": ent["entity_name"], "type": ent["entity_type"]}
-                )
-                g.query("""
-                  MATCH (c:Chunk {id: $cid}), (e:Entity {id: $eid})
-                  MERGE (c)-[m:MENTIONS]->(e)
-                  SET m.confidence = $conf
-                """, {"cid": ac["chunk_id"], "eid": ent["entity_id"], "conf": ent["confidence"]})
-        print(f"Ingested {len(annotated_chunks)} chunks into FalkorDB.")
+            self.g.query("""
+              MATCH (c:Chunk {id: $cid}), (e:Entity {id: $eid})
+              MERGE (c)-[m:MENTIONS]->(e)
+              SET m.confidence = $conf
+            """, {"cid": cid, "eid": ent["entity_id"], "conf": ent["confidence"]})
+        self.ingested += 1
+        return True
 
-        print("\n=== 3. Embedding & COBWEB Clustering ===")
-        t0 = time.perf_counter()
-        embeddings = embed(texts)
-        print(f"Generated embeddings in {(time.perf_counter() - t0) * 1000:.0f}ms")
+    def get_stats(self):
+        return {"falkor_chunks_ingested": self.ingested}
 
-        retriever = CobwebRetriever(corpus=texts, corpus_embeddings=embeddings)
-        with open(RETRIEVER_PATH, "wb") as f:
-            pickle.dump({"retriever": retriever, "docs": annotated_chunks}, f)
-        print(f"CobwebRetriever saved to {RETRIEVER_PATH}")
-
-        # Determine implicit clusters from Cobweb (simulated for solr ingestion)
-        # Using the base of the cobweb tree conceptually
-        cluster_ids = ["concept_" + str(i % 5) for i in range(len(corpus))] 
-
-        print("\n=== 4. Solr Ingestion ===")
+@ray.remote
+class SolrActor:
+    def __init__(self):
+        self.solr_keyword = pysolr.Solr(SOLR_KEYWORD_URL, always_commit=False, timeout=30)
+        self.solr_vector = pysolr.Solr(SOLR_VECTOR_URL, always_commit=False, timeout=30)
+        self.ingested = 0
         self._setup_solr_schemas()
-
-        solr_docs = []
-        for ac, emb, cluster_id in zip(annotated_chunks, embeddings, cluster_ids):
-            solr_docs.append({
-                "id": ac["chunk_id"],
-                "chunk_id": ac["chunk_id"],
-                "source": ac["source"],
-                "chunk_text": ac["text"],
-                "entities": [e["entity_name"] for e in ac["entities"]],
-                "entity_types": list(set(e["entity_type"] for e in ac["entities"])),
-                "confidence": min([e["confidence"] for e in ac["entities"]], default=1.0),
-                "cluster_id": cluster_id,
-                "chunk_vector": emb.tolist()
-            })
-
-        # To Solr Keyword
-        solr_kw_docs = [{k: v for k, v in d.items() if k != "chunk_vector"} for d in solr_docs]
-        self.solr_keyword.add(solr_kw_docs)
-        self.solr_keyword.commit()
         
-        # To Solr Vector
-        self.solr_vector.add(solr_docs)
-        self.solr_vector.commit()
-
-        print(f"Indexed {len(solr_docs)} docs to both Solr cores.")
-        print("\nOffline pipeline complete.")
-
     def _setup_solr_schemas(self):
         def add_field(url, name, field_type, **kwargs):
             payload = {"add-field": {"name": name, "type": field_type, **kwargs}}
@@ -185,15 +117,160 @@ class OfflinePipeline:
         add_field(SOLR_VECTOR_URL, "cluster_id", "string")
         add_field(SOLR_VECTOR_URL, "chunk_vector", "knn_vector_768", stored=True, indexed=True)
 
+    def ingest(self, chunk: dict, entities: list, emb: list, cluster_id: str):
+        solr_doc = {
+            "id": chunk["id"],
+            "chunk_id": chunk["id"],
+            "source": chunk["source"],
+            "chunk_text": chunk["text"],
+            "entities": [e["entity_name"] for e in entities],
+            "entity_types": list(set(e["entity_type"] for e in entities)),
+            "confidence": min([e["confidence"] for e in entities], default=1.0),
+            "cluster_id": cluster_id,
+            "chunk_vector": emb
+        }
+        
+        # Keyword
+        solr_kw_doc = {k: v for k, v in solr_doc.items() if k != "chunk_vector"}
+        self.solr_keyword.add([solr_kw_doc])
+        
+        # Vector
+        self.solr_vector.add([solr_doc])
+        
+        self.ingested += 1
+        
+        if self.ingested % 100 == 0:
+            self.solr_keyword.commit()
+            self.solr_vector.commit()
+            
+        return True
+        
+    def finalize(self):
+        self.solr_keyword.commit()
+        self.solr_vector.commit()
+        return {"solr_docs_ingested": self.ingested}
+
+
+@ray.remote
+class CobwebActor:
+    def __init__(self):
+        self.texts = []
+        self.embeddings = []
+        self.docs_metadata = []
+
+    def ingest(self, chunk: dict, entities: list, emb: list):
+        self.texts.append(chunk["text"])
+        self.embeddings.append(emb)
+        self.docs_metadata.append({
+            "chunk_id": chunk["id"], 
+            "source": chunk["source"], 
+            "text": chunk["text"],
+            "entities": entities
+        })
+        # Simulate a cluster id for solr mapping
+        cluster_id = f"concept_{len(self.texts) % 5}"
+        return cluster_id
+
+    def build_tree(self):
+        print("Building CobwebRetriever tree...")
+        if not self.texts:
+            return {"status": "no data"}
+            
+        embeddings_arr = np.array(self.embeddings, dtype=np.float32)
+        retriever = CobwebRetriever(corpus=self.texts, corpus_embeddings=embeddings_arr)
+        
+        with open(RETRIEVER_PATH, "wb") as f:
+            pickle.dump({"retriever": retriever, "docs": self.docs_metadata}, f)
+            
+        return {"tree_size": len(self.texts), "path": str(RETRIEVER_PATH)}
+
+
+# --- Stateless Worker ---
+
+_gliner_model = None
+
+@ray.remote
+def process_chunk(chunk: dict, falkor_actor, solr_actor, cobweb_actor):
+    global _gliner_model
+    if _gliner_model is None:
+        from gliner import GLiNER
+        _gliner_model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1")
+        
+    # 1. Extraction
+    entities = _gliner_model.predict_entities(chunk["text"], LABELS, threshold=0.45)
+    
+    formatted_entities = []
+    for e in entities:
+        eid = normalize_entity_id(e["text"])
+        etype = {"organization": "ORG", "person": "PERSON", "location": "LOCATION",
+                 "date": "DATE", "monetary_amount": "AMOUNT", "product": "PRODUCT",
+                 "technology": "TECH"}.get(e["label"], e["label"].upper())
+        formatted_entities.append({
+            "entity_id": eid, "entity_name": e["text"], "entity_type": etype,
+            "confidence": round(e["score"], 4)
+        })
+        
+    # 2. Embedding
+    emb = embed([chunk["text"]])[0].tolist()
+    
+    # 3. Graph Routing
+    falkor_actor.ingest.remote(chunk, formatted_entities)
+    
+    # 4. Cobweb & Solr Routing (sequential to get cluster ID)
+    cluster_id = ray.get(cobweb_actor.ingest.remote(chunk, formatted_entities, emb))
+    solr_actor.ingest.remote(chunk, formatted_entities, emb, cluster_id)
+    
+    return chunk["id"]
+
+
+# --- Main Application ---
+
+def run_pipeline(corpus_file: Path, limit: int = None):
+    print("=== Ray-powered OVIR Offline Pipeline ===")
+    ray.init(ignore_reinit_error=True)
+    
+    falkor = FalkorActor.remote()
+    solr = SolrActor.remote()
+    cobweb = CobwebActor.remote()
+    
+    # Clear previous graph
+    ray.get(falkor.clear_graph.remote())
+    
+    futures = []
+    count = 0
+    t0 = time.time()
+    
+    print(f"Streaming data from {corpus_file}...")
+    with open(corpus_file, "r", encoding="utf-8") as f:
+        for line in f:
+            if not line.strip(): continue
+            chunk = json.loads(line)
+            
+            # Fire and forget to background workers
+            futures.append(process_chunk.remote(chunk, falkor, solr, cobweb))
+            count += 1
+            if limit and count >= limit:
+                break
+                
+    # Wait for all workers to finish their ML tasks
+    processed = ray.get(futures)
+    print(f"\nDispatched {len(processed)} chunks in {time.time() - t0:.2f} seconds.")
+    
+    print("\nWaiting for sinks to finalize...")
+    solr_stats = ray.get(solr.finalize.remote())
+    falkor_stats = ray.get(falkor.get_stats.remote())
+    cobweb_stats = ray.get(cobweb.build_tree.remote())
+    
+    print("\n=== Final Pipeline Statistics ===")
+    print(f"FalkorDB: {falkor_stats}")
+    print(f"Solr:     {solr_stats}")
+    print(f"COBWEB:   {cobweb_stats}")
+
 if __name__ == "__main__":
-    sample_corpus = [
-        {"id": "c1", "source": "acme_msla_2024.pdf", "text": "ACME Corp agrees to pay Globex $2M annually under this MSA."},
-        {"id": "c2", "source": "acme_msla_2024.pdf", "text": "Liability is capped at 12 months of fees paid by ACME Corp under Section 8.2."},
-        {"id": "c3", "source": "acme_sow_001.pdf", "text": "Globex will deliver the data pipeline by June 30, 2024."},
-        {"id": "c4", "source": "globex_vendor_reg.pdf", "text": "Globex is a wholly-owned subsidiary of Initech Holdings incorporated in Delaware."},
-        {"id": "c5", "source": "initech_annual_2023.pdf", "text": "Initech Holdings reported $800M revenue in FY2023. CEO is Bill Lumbergh."},
-    ]
-    pipeline = OfflinePipeline()
-    pipeline.run(sample_corpus)
-
-
+    # If the user provides the corpus file, use it. Otherwise use a small sample.
+    data_path = Path(__file__).parent.parent.parent.parent / "data" / "cfpb_corpus.jsonl"
+    if data_path.exists():
+        # Limit to 500 chunks for the integration test to save time, but it scales!
+        run_pipeline(data_path, limit=500)
+    else:
+        print(f"Warning: Could not find {data_path}. Please run fetch_cfpb_corpus.py first.")
