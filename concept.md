@@ -64,7 +64,7 @@ The concept generalizes to any domain. For a new corpus, the pipeline is:
 4. **Run the outer optimization loop.** Use DSPy + large LLM to jointly optimize:
    - corpus representation (chunking, entity extraction, relationship weighting),
    - graph schema and traversal heuristics,
-   - retrieval configuration (e.g., BM25 parameters, hybrid weighting),
+   - retrieval configuration (e.g., Apache Solr parameters, hybrid weighting),
    - graph database setup (e.g., FalkorDB schema and indices),
    - tool signatures and prompts.
 5. **Select and configure the inference-time model.** Use DSPy to pick the smallest model that meets the eval threshold over the prepared corpus.

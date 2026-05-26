@@ -5,7 +5,7 @@ Here's the complete edit list, ordered by section, ready to hand to the front-en
 **1. `<title>` and meta tags**
 
 - `<title>`: change from `OVIR.net — Opportunistic Verifiable Inference Runtime Network` to `OVIR.net — Offline Verified Inference Retrieval Network`
-- `meta-description`: change to `OVIR is an offline verified inference retrieval network: corpus preprocessing with GLiNER entity extraction, COBWEB topic hierarchy, knowledge graph, and BM25 — composed at query time by a small DSPy-orchestrated LM.`
+- `meta-description`: change to `OVIR is an offline verified inference retrieval network: corpus preprocessing with GLiNER entity extraction, COBWEB topic hierarchy, knowledge graph, and Apache Solr — composed at query time by a small DSPy-orchestrated LM.`
 - `meta-og:description`: change to `A workload-first offline preprocessing and retrieval runtime for repeated queries over known corpora.`
 - `meta-og:title`: change to `OVIR.net — Offline Verified Inference Retrieval Network`
 - `meta-theme-color`: keep `#0d0f12`
@@ -37,7 +37,7 @@ Here's the complete edit list, ordered by section, ready to hand to the front-en
 | Wedge | Repeated short queries | Offline preprocessing |
 | Context | Stable long corpus | Verified inference network |
 | Runtime | Elixir / OTP + Nx | DSPy + small LM (3–7B) |
-| Compute | Sparse + cached | BM25 + graph + COBWEB |
+| Compute | Sparse + cached | Solr + graph + COBWEB |
 | Trust | Receipts + recompute | Auditable retrieval chains |
 
 ---
@@ -51,9 +51,9 @@ Here's the complete edit list, ordered by section, ready to hand to the front-en
 
 - **Data rooms and diligence** card: keep title and description. Replace tags `contract review`, `evidence packs`, `audit trail` with `entity linking`, `graph traversal`, `verified citations`
 
-- **Stable archives** card: keep title and description. Replace tags `cached answers`, `routing memory`, `fallback reuse` with `BM25 scoping`, `COBWEB routing`, `offline precomputation`
+- **Stable archives** card: keep title and description. Replace tags `cached answers`, `routing memory`, `fallback reuse` with `Solr scoping`, `COBWEB routing`, `offline precomputation`
 
-- **Large repositories** card: keep title and description. Replace tags `fragment locality`, `call graph hints`, `spot checks` with `call graph indexing`, `entity extraction`, `BM25 + graph hybrid`
+- **Large repositories** card: keep title and description. Replace tags `fragment locality`, `call graph hints`, `spot checks` with `call graph indexing`, `entity extraction`, `Solr + graph hybrid`
 
 - **Policy corpora** card: keep title and description. Replace tags `citations`, `receipts`, `recompute` with `offline verified fragments`, `auditable retrieval chain`, `receipts`
 
@@ -77,10 +77,10 @@ Here's the complete edit list, ordered by section, ready to hand to the front-en
 - Add three new panels:
 
 **Panel 1 — Offline verified decomposition**
-> The corpus is parsed once, offline. GLiNER tags every chunk with entity IDs, types, and confidence scores. A knowledge graph connects entity relationships — explicit links from source material plus inferred transitive paths. COBWEB clustering builds a probabilistic topic hierarchy over the chunk space. BM25 indices and graph edges are materialized and verified against source before the runtime sees any query.
+> The corpus is parsed once, offline. GLiNER tags every chunk with entity IDs, types, and confidence scores. A knowledge graph connects entity relationships — explicit links from source material plus inferred transitive paths. COBWEB clustering builds a probabilistic topic hierarchy over the chunk space. Apache Solr indices and graph edges are materialized and verified against source before the runtime sees any query.
 
 **Panel 2 — Query-time composition**
-> A small LM (3–7B), orchestrated by DSPy, extracts entities and routing intent from the user query. The COBWEB hierarchy returns probable concept clusters given the extracted entities. BM25 and graph search run scoped to those clusters. Results assemble from pre-verified fragments. The LM orchestrates lookups — it does not generate reasoning over raw documents.
+> A small LM (3–7B), orchestrated by DSPy, extracts entities and routing intent from the user query. The COBWEB hierarchy returns probable concept clusters given the extracted entities. Apache Solr and graph search run scoped to those clusters. Results assemble from pre-verified fragments. The LM orchestrates lookups — it does not generate reasoning over raw documents.
 
 **Panel 3 — Approximate query processing**
 > The same retrieval network scales with available compute. Minimal resources: traverse the hierarchy shallowly, return top results fast. Abundant resources: explore multiple branches in parallel, run consistency checks across answer paths, aggregate by confidence. More compute → higher recall. Graceful degradation is structural, not an afterthought.
@@ -101,8 +101,8 @@ This is a new section, anchor id `#corpus`, added to nav as described above.
 1. **Parse and chunk.** Structural chunking — section boundaries for documents, records for tables, AST nodes for code. Not sliding windows.
 2. **Entity extraction.** GLiNER runs over every chunk. Zero-shot, no domain-specific training required. Outputs: entity spans, types, confidence scores. Stored alongside chunks.
 3. **Knowledge graph construction.** Entity relationships from co-occurrence, explicit source links, and inferred transitive paths. Neo4j or FalkorDB. Pre-indexed for O(1) neighborhood lookup at query time.
-4. **COBWEB topic hierarchy.** Hierarchical probabilistic clustering over chunk representations. Produces `P(chunk | cluster)` for every chunk. Incrementally updatable. Fast tree traversal at query time prunes low-probability branches before BM25 runs.
-5. **Index materialization.** BM25 index (turbopuffer or Postgres with GiST), dense embeddings for entity descriptions and document summaries, columnar metadata index (dates, entity types, confidence scores). All stored, versioned, and verifiable against source hashes.
+4. **COBWEB topic hierarchy.** Hierarchical probabilistic clustering over chunk representations. Produces `P(chunk | cluster)` for every chunk. Incrementally updatable. Fast tree traversal at query time prunes low-probability branches before Apache Solr runs.
+5. **Index materialization.** Apache Solr index, dense embeddings for entity descriptions and document summaries, columnar metadata index (dates, entity types, confidence scores). All stored, versioned, and verifiable against source hashes.
 
 - Footer note for this section:
 
@@ -121,7 +121,7 @@ This is a new section, anchor id `#corpus`, added to nav as described above.
 
 1. **Extract query intent.** DSPy module extracts entities and routing signal from the user query. Typed output: `[entity, entity_type, confidence]`. Fast, deterministic.
 2. **Traverse COBWEB hierarchy.** Given extracted entities, compute `P(cluster | entities)`. Descend the hierarchy. Return ranked concept clusters. Low-probability branches pruned before search runs.
-3. **Execute scoped retrieval.** BM25 and/or graph traversal, scoped to high-probability clusters. Search space is pre-narrowed. Results ranked by relevance within scope.
+3. **Execute scoped retrieval.** Apache Solr search and/or graph traversal, scoped to high-probability clusters. Search space is pre-narrowed. Results ranked by relevance within scope.
 4. **Merge and decide.** Accept result when confidence, citation coverage, and conflict checks pass. If below threshold: expand cluster scope, increase parallel branch count, or trigger fallback.
 5. **Fallback when needed.** Escalate to a larger model, broader search, or human review. Fallback result is stored — it becomes reusable network memory for similar future queries.
 6. **Emit retrieval trace.** Record: entities extracted, clusters traversed, fragments retrieved, ranking rationale, latency, cache hits. Every answer reproducible from its trace.
@@ -139,13 +139,14 @@ This is a new section, anchor id `#corpus`, added to nav as described above.
 > Zero-shot named entity recognition. Runs offline over the full corpus once. No domain-specific training. Outputs entity spans, types, and confidence scores stored alongside every chunk.
 
 **Knowledge graph — Neo4j / FalkorDB**
-> Entity relationships from co-occurrence, explicit source links, and inferred transitive paths. Pre-indexed for fast neighborhood traversal. Handles relationship queries the BM25 index cannot.
+> Entity relationships from co-occurrence, explicit source links, and inferred transitive paths. Pre-indexed for fast neighborhood traversal. Handles relationship queries the Apache Solr index cannot.
 
 **COBWEB — Topic hierarchy**
 > Hierarchical probabilistic clustering over chunk representations. Gives `P(chunk | cluster)` for every chunk. Incrementally updatable when corpus changes. O(log n) traversal at query time.
 
-**BM25 + metadata — turbopuffer / Postgres**
-> Keyword search on well-formed, pre-parsed chunks. Native metadata filtering on entity types, dates, confidence scores. Scoped to COBWEB clusters — search space pre-narrowed before BM25 executes.
+**Apache Solr — Search and Metadata**
+
+> Keyword search on well-formed, pre-parsed chunks. Native metadata filtering on entity types, dates, confidence scores. Scoped to COBWEB clusters — search space pre-narrowed before Apache Solr search executes.
 
 **DSPy — Orchestration and optimization**
 > Small LM (3–7B instruct) with typed DSPy signatures for entity extraction, routing, and result assembly. MIPROv2 or custom RL optimizer trained on labeled `(query, expected_entities, expected_results)` examples. 500–2k labeled examples sufficient to tune routing decisions.
@@ -158,10 +159,10 @@ This is a new section, anchor id `#corpus`, added to nav as described above.
 - Replace current week-5 integration test with three milestones:
 
 **Milestone 1 — Offline pipeline**
-> Single domain corpus (e.g., 10k documents). GLiNER entity extraction, knowledge graph construction, COBWEB clustering, BM25 index — all materialized and hashed against source. Passing conditions: entity coverage > 90%, cluster coherence measurable, pipeline fully reproducible from source hash.
+> Single domain corpus (e.g., 10k documents). GLiNER entity extraction, knowledge graph construction, COBWEB clustering, Apache Solr index — all materialized and hashed against source. Passing conditions: entity coverage > 90%, cluster coherence measurable, pipeline fully reproducible from source hash.
 
 **Milestone 2 — Query runtime**
-> DSPy modules wired to preprocessed corpus. Entity extraction → hierarchy traversal → scoped BM25 → result assembly. Target: < 500ms P95 on a single query. Passing conditions: end-to-end retrieval trace emitted, every retrieved fragment traceable to source chunk and cluster.
+> DSPy modules wired to preprocessed corpus. Entity extraction → hierarchy traversal → scoped Solr search → result assembly. Target: < 500ms P95 on a single query. Passing conditions: end-to-end retrieval trace emitted, every retrieved fragment traceable to source chunk and cluster.
 
 **Milestone 3 — Parallel approximate processing**
 > Same pipeline, N parallel branches. Measure recall vs. compute budget. Passing condition: doubling parallel branches improves recall on held-out eval set. Publish recall@k curve vs. compute budget as a public benchmark artifact.
