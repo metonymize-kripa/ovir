@@ -199,7 +199,9 @@ Question:"""
 # ---------------------------------------------------------------------------
 
 def sample_company_target(adj, radj, industries: dict, n: int):
-    skills = [e for e in adj if e.startswith("skill:") and len(radj[e]) >= 3]
+    skills = [e for e in radj if e.startswith("skill:") and len(radj[e]) >= 3]
+    if not skills:
+        return []
     samples = []
     attempts = 0
     while len(samples) < n and attempts < n * 20:
