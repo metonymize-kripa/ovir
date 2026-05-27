@@ -1,9 +1,11 @@
 # OVIR — Offline Verified Inference Retrieval
 
 ## Overview
-OVIR is a fast, locally hosted two-loop retrieval architecture designed for verified inference. It splits the heavy lifting of unstructured text processing into an expensive offline "outer loop" and serves rapid, highly-scoped queries in an online "inner loop." 
+OVIR is a fast, locally hosted two-loop retrieval architecture designed for verified inference. It splits the heavy lifting of unstructured text processing into an expensive offline "outer loop" and serves rapid, highly-scoped queries in an online "inner loop."
 
-**Repository Stats:** ~4,000 lines of Python code, organized into self-contained component playgrounds and a unified pipeline. All models run locally via Ollama with zero cloud dependencies.
+Full design rationale: [`concept.md`](concept.md).
+
+**Repository Stats:** ~6,000 lines of Python code, organized into a packaged `src/ovir/` library, self-contained component playgrounds, a unified pipeline, and a KG research subproject. All models run locally via Ollama with zero cloud dependencies.
 
 ## Architecture
 
@@ -24,6 +26,39 @@ COBWEB scope → FalkorDB graph traversal → Solr `fq` pre-filter → BM25 or K
 | Embeddings | `nomic-embed-text` | COBWEB index, Solr KNN |
 
 All three already in `ollama ls`. No pulls needed.
+
+## Package: `src/ovir/`
+
+The `src/ovir/` package contains the production-ready implementations of each loop, organized as importable modules.
+
+### `src/ovir/offline/pipeline.py`
+Ray-powered outer loop using stateful Actors. Three concurrent sinks — `FalkorActor`, `SolrActor`, `CobwebActor` — receive processed chunks from stateless `process_chunk` workers that run GLiNER + embedding in parallel.
+
+```python
+from ovir.offline.pipeline import run_pipeline
+from pathlib import Path
+run_pipeline(Path("data/cfpb_corpus.jsonl"), limit=500)
+```
+
+### `src/ovir/runtime/query.py`
+DSPy-based `OnlineRuntime`. Loads the COBWEB retriever pickle, runs hybrid Solr search (30% BM25 + 70% KNN) scoped to COBWEB clusters, and assembles the answer via `OVIRQueryModule`.
+
+```python
+from ovir.runtime.query import OnlineRuntime
+rt = OnlineRuntime()
+trace = rt.query("What is ACME Corp's liability cap?", top_k=3)
+# Returns: entities, answer, is_sufficient, latency_ms, scope sizes
+```
+
+### `src/ovir/eval/synthesize.py`
+Synthetic eval dataset generator. Uses `qwen3.6:35b-mlx` (outer loop LM) to produce `(question, expected_entities, expected_answer)` triples from corpus chunks. Output drives DSPy optimization.
+
+```python
+from ovir.eval.synthesize import generate_synthetic_dataset
+generate_synthetic_dataset(corpus_chunks, output_path="synthetic_eval.json")
+```
+
+---
 
 ## Running on real data
 
@@ -109,6 +144,26 @@ uv run 03_ovir_ray_pipeline.py  # 50-chunk outer loop sim, ~24 chunks/s
 ```
 Note: `ray.init(runtime_env={"excludes": [".venv/", "pyproject.toml", "uv.lock"]})` is required to prevent per-worker dep reinstall.
 
+### `kg-linkedin-research/`
+Research subproject: KG-augmented LLM reasoning over LinkedIn Economic Graph data. Goal is to match large-model QA quality on multi-hop career/skills queries using a small LM + graph embeddings, without fine-tuning weights.
+
+Stack: DGL-KE (RotatE embeddings over `(member, relation, entity)` triples) → PyKEEN for link prediction baselines → GSR retriever → DSPy GEPA optimization for the inference-time module.
+
+Key files:
+- `PLAN.md` — step-by-step pipeline from raw TSV triples to optimized DSPy module
+- `convert_to_kg.py` — ETL from O*NET/LinkedIn data formats to DGL-KE triple format
+- `train_kg.sh` — DGL-KE training invocation (RotatE, 256d, on sample graph)
+- `pykeen.md` — notes on PyKEEN link prediction baselines
+- `data_sources.md` — data sourcing and licensing notes
+
+```bash
+cd kg-linkedin-research
+python convert_to_kg.py        # ETL raw data → train/valid/test TSVs
+bash train_kg.sh               # train RotatE embeddings
+```
+
+Note: `dglke` installed from source via `pyproject.toml` uv source entry (`awslabs/dgl-ke`). Requires PyTorch; use `DGLBACKEND=pytorch`.
+
 ### `gensyn-playground/`
 Gensyn REE verifiable inference. Run/verify subprocess wrapper and receipt analysis stub.
 ```bash
@@ -132,5 +187,6 @@ uv run 02_query.py        # tests retrieval against the built index
 | Solr 10 (keyword) | BM25 search over scoped candidates | 8983 |
 | Solr 10 (vectors) | KNN search, hybrid scoring | 8984 |
 | Ollama | LM inference + embeddings (local) | 11434 |
+| DGL-KE / PyKEEN | KG embedding training (`kg-linkedin-research`) | — |
 
-FalkorDB and Ollama run as persistent containers. Solr instances are started per-playground via `docker compose`.
+FalkorDB and Ollama run as persistent containers. Solr instances are started per-playground via `docker compose`. DGL-KE and PyKEEN are Python-only; no service required.

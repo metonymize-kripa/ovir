@@ -10,10 +10,12 @@ requires-python = ">=3.11"
 dependencies = [
     "cobweb-language-embedding",
     "concept-formation>=0.3.9",
+    "dglke",
     "dspy>=3.2.1",
     "falkordb>=1.0.0",
     "gliner>=0.2.26",
     "numpy>=1.24.0",
+    "pykeen>=1.11.1",
     "pysolr>=3.11.0",
     "redis>=5.0.0",
     "requests>=2.32.0",
@@ -25,6 +27,7 @@ build-backend = "hatchling.build"
 
 [tool.uv.sources]
 cobweb-language-embedding = { git = "https://github.com/Teachable-AI-Lab/cobweb-language-embedding.git" }
+dglke = { git = "https://github.com/awslabs/dgl-ke.git", subdirectory = "python" }
 
 [tool.uv.workspace]
 members = ["ray-playground"]
