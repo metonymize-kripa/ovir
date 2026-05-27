@@ -373,7 +373,7 @@ if __name__ == "__main__":
     os.makedirs(os.path.dirname(args.out) if os.path.dirname(args.out) else ".", exist_ok=True)
     total = 0
 
-    with open(args.out, "w") as out_f:
+    with open(args.out, "a") as out_f:
         for qtype in args.types:
             print(f"\n--- Generating {args.n} '{qtype}' pairs ---")
             candidates = SAMPLE_FNS[qtype](adj, radj, industries, args.n)
