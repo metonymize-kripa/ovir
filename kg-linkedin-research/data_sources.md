@@ -149,6 +149,14 @@ Combined entity count: ~55K nodes. Combined edge count: ~600K–800K. Reasonable
 
 See `convert_to_kg.py` in this folder — downloads O*NET and converts to TSV triple format ready for DGL-KE.
 
+```bash
+# Run from repo root (ovir/)
+uv run kg-linkedin-research/convert_to_kg.py \
+  --onet data/db_30_0_text/ \
+  --linkedin data/LinkedIn-JobPostings-2023-2024/ \
+  --out data/kg/
+```
+
 ---
 
 ## References

@@ -4,16 +4,11 @@ Converts O*NET and arshkon LinkedIn Job Postings into TSV triple format
 ready for DGL-KE training.
 
 Usage:
-    # Step 1: Download O*NET (free, no account)
-    curl -O https://www.onetcenter.org/dl_files/database/db_30_0_text.zip
-    unzip db_30_0_text.zip -d data/onet/
-
-    # Step 2: Download arshkon (requires kaggle CLI + account)
-    kaggle datasets download -d arshkon/linkedin-job-postings
-    unzip linkedin-job-postings.zip -d data/linkedin_postings/
-
-    # Step 3: Run this script
-    python convert_to_kg.py --onet data/onet/ --linkedin data/linkedin_postings/ --out data/kg/
+    # Run from the repo root (ovir/):
+    uv run kg-linkedin-research/convert_to_kg.py \
+        --onet data/db_30_0_text/ \
+        --linkedin data/LinkedIn-JobPostings-2023-2024/ \
+        --out data/kg/
 
 Output files (in --out dir):
     entities.dict      entity_id <TAB> entity_name
@@ -55,9 +50,9 @@ def load_onet(onet_dir: str):
     Load O*NET text files and return lists of (head, relation, tail) string triples.
 
     Key files used:
-      Occupation Data.txt       -> occupation nodes
-      Skills.txt                -> occupation -[has_skill]-> skill (importance > 3.0)
-      Knowledge.txt             -> occupation -[has_knowledge]-> knowledge_domain
+      Occupation Data.txt       -> occupation nodes + code→title lookup
+      Skills.txt                -> occupation -[has_skill]-> skill (importance > 2.5)
+      Knowledge.txt             -> occupation -[has_knowledge]-> knowledge_domain (importance > 3.0)
       Technology Skills.txt     -> occupation -[uses_technology]-> tool
       Related Occupations.txt   -> occupation -[related_to]-> occupation
     """
@@ -75,12 +70,20 @@ def load_onet(onet_dir: str):
                 rows.append(row)
         return rows
 
-    # Occupation nodes (just to ensure they exist as entities)
+    # Build code→title lookup from Occupation Data.txt.
+    # All other O*NET files carry only the SOC code, not the title.
     occ_rows = read_tab("Occupation Data.txt")
-    occ_ids = set()
+    onet_titles = {}
     for r in occ_rows:
-        occ_id = "occ:" + norm(r.get("Title", r.get("O*NET-SOC Code", "")))
-        occ_ids.add(occ_id)
+        code = r.get("O*NET-SOC Code", "")
+        title = r.get("Title", "")
+        if code and title:
+            onet_titles[code] = title
+
+    def occ_node(row):
+        code = row.get("O*NET-SOC Code", "")
+        title = onet_titles.get(code, code)
+        return "occ:" + norm(title)
 
     # Skills
     for r in read_tab("Skills.txt"):
@@ -90,7 +93,7 @@ def load_onet(onet_dir: str):
             continue
         if r.get("Scale ID", "") != "IM" or importance < 2.5:
             continue
-        occ = "occ:" + norm(r.get("Title", ""))
+        occ = occ_node(r)
         skill = "skill:" + norm(r.get("Element Name", ""))
         triples.append((occ, "has_skill", skill))
 
@@ -102,21 +105,23 @@ def load_onet(onet_dir: str):
             continue
         if r.get("Scale ID", "") != "IM" or importance < 3.0:
             continue
-        occ = "occ:" + norm(r.get("Title", ""))
+        occ = occ_node(r)
         domain = "knowledge:" + norm(r.get("Element Name", ""))
         triples.append((occ, "requires_knowledge", domain))
 
     # Technology skills
     for r in read_tab("Technology Skills.txt"):
-        occ = "occ:" + norm(r.get("Title", ""))
+        occ = occ_node(r)
         tech = "tech:" + norm(r.get("Example", r.get("Commodity Title", "")))
         if tech != "tech:":
             triples.append((occ, "uses_technology", tech))
 
-    # Related occupations
+    # Related occupations — column is "Related O*NET-SOC Code", not a title column
     for r in read_tab("Related Occupations.txt"):
-        occ_a = "occ:" + norm(r.get("Title", ""))
-        occ_b = "occ:" + norm(r.get("Related O*NET-SOC 2019 Title", ""))
+        occ_a = occ_node(r)
+        related_code = r.get("Related O*NET-SOC Code", "")
+        related_title = onet_titles.get(related_code, related_code)
+        occ_b = "occ:" + norm(related_title)
         if occ_a and occ_b and occ_a != occ_b:
             triples.append((occ_a, "related_to_occupation", occ_b))
 
@@ -132,13 +137,14 @@ def load_linkedin(linkedin_dir: str):
     """
     Load arshkon LinkedIn Job Postings CSVs and return triples.
 
-    Files used:
-      job_postings.csv                       -> job nodes
+    Actual directory layout (arshkon v2023-2024):
+      postings.csv                           -> job nodes  (NOT job_postings.csv)
       companies/companies.csv                -> company nodes
-      mappings/job_skills.csv                -> job -[requires_skill]-> skill
-      mappings/job_industries.csv            -> job -[in_industry]-> industry
-      mappings/company_industries.csv        -> company -[operates_in]-> industry
-      mappings/company_specialities.csv      -> company -[specialises_in]-> specialty
+      jobs/job_skills.csv                    -> job -[requires_skill]-> skill
+      jobs/job_industries.csv                -> job -[in_industry]-> industry
+      companies/company_industries.csv       -> company -[operates_in]-> industry
+      companies/company_specialities.csv     -> company -[specialises_in]-> specialty
+      mappings/skills.csv                    -> skill_abr → skill_name lookup
     """
     triples = []
 
@@ -149,8 +155,16 @@ def load_linkedin(linkedin_dir: str):
         with open(path, encoding="utf-8") as f:
             return list(csv.DictReader(f))
 
-    # Job postings -> company edges
-    postings = read_csv(os.path.join(linkedin_dir, "job_postings.csv"))
+    # Build skill abbreviation → full name lookup from mappings/skills.csv
+    skill_lookup = {}
+    for r in read_csv(os.path.join(linkedin_dir, "mappings", "skills.csv")):
+        abr = r.get("skill_abr", "").strip()
+        name = r.get("skill_name", "").strip()
+        if abr and name:
+            skill_lookup[abr] = name
+
+    # Job postings -> company edges  (file is postings.csv, not job_postings.csv)
+    postings = read_csv(os.path.join(linkedin_dir, "postings.csv"))
     job_company = {}
     for r in postings:
         job_id = r.get("job_id", "")
@@ -162,31 +176,33 @@ def load_linkedin(linkedin_dir: str):
             job_company[job_id] = (job_node, company_node)
             triples.append((company_node, "posted_job", job_node))
 
-    # Job skills
-    for r in read_csv(os.path.join(linkedin_dir, "mappings", "job_skills.csv")):
+    # Job skills — lives under jobs/, abbreviations resolved via skill_lookup
+    for r in read_csv(os.path.join(linkedin_dir, "jobs", "job_skills.csv")):
         job_id = r.get("job_id", "")
-        skill = norm(r.get("skill_abr", r.get("skill_name", "")))
+        abr = r.get("skill_abr", "").strip()
+        skill_name = skill_lookup.get(abr, abr)  # fall back to raw abr if lookup misses
+        skill = norm(skill_name)
         if job_id in job_company and skill:
             job_node = job_company[job_id][0]
             triples.append((job_node, "requires_skill", f"skill:{skill}"))
 
-    # Job industries
-    for r in read_csv(os.path.join(linkedin_dir, "mappings", "job_industries.csv")):
+    # Job industries — lives under jobs/
+    for r in read_csv(os.path.join(linkedin_dir, "jobs", "job_industries.csv")):
         job_id = r.get("job_id", "")
         industry = norm(r.get("industry_id", r.get("industry", "")))
         if job_id in job_company and industry:
             job_node = job_company[job_id][0]
             triples.append((job_node, "in_industry", f"industry:{industry}"))
 
-    # Company industries
-    for r in read_csv(os.path.join(linkedin_dir, "mappings", "company_industries.csv")):
+    # Company industries — lives under companies/
+    for r in read_csv(os.path.join(linkedin_dir, "companies", "company_industries.csv")):
         company_id = r.get("company_id", "")
         industry = norm(r.get("industry", ""))
         if company_id and industry:
             triples.append((f"company:{company_id}", "operates_in", f"industry:{industry}"))
 
-    # Company specialities
-    for r in read_csv(os.path.join(linkedin_dir, "mappings", "company_specialities.csv")):
+    # Company specialities — lives under companies/
+    for r in read_csv(os.path.join(linkedin_dir, "companies", "company_specialities.csv")):
         company_id = r.get("company_id", "")
         spec = norm(r.get("speciality", ""))
         if company_id and spec:
