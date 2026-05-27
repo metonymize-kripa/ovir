@@ -179,6 +179,20 @@ uv run 01_outer_loop.py   # builds all three indexes from cfpb_corpus.jsonl
 uv run 02_query.py        # tests retrieval against the built index
 ```
 
+## Practical considerations
+
+The architecture rests on three independent bets. All three have to hold.
+
+**Bet 1 — Extraction fidelity.** The offline pass produces a graph that encodes the actual relational structure of the corpus — not co-occurrence, but typed directed relationships: `liable_under`, `amended_by`, `applies_to`. Co-occurrence is cheap to extract and nearly useless for retrieval. Typed relations require a large model in the outer loop; GLiNER handles entity spans, but relationship semantics require the full `qwen3.6:35b-mlx` pass. This is the foundation. A noisy graph misleads retrieval worse than no graph at all. Validate extraction quality against a labeled sample before building the query runtime.
+
+**Bet 2 — Query translation.** The small inference-time model can parse a natural language query into graph traversals and Solr operations that retrieve the right fragments. This depends on Bet 1: translation quality is ceilinged by how consistent and well-typed the graph schema is. DSPy optimization helps — translation signatures are trained against known-good retrieval traces, so failures are measurable. Test on known queries with known expected graph paths before treating this as solved.
+
+**Bet 3 — Decomposition.** Compound natural language requests — "summarize our liability exposure across all active contracts with Tier 1 vendors" — can be reliably split into a mix of formal graph queries and informal generative steps, with results composed into a coherent answer. This is the least validated of the three and where research is genuinely thin. Decomposition requires understanding what the graph can answer versus what requires generation; composition can fail even when individual retrievals succeed.
+
+**On using a large model for decomposition.** Bet 3 is where a large model at query time makes sense. The cost argument still holds: the graph is built once, formal query execution is cheap regardless of what generates the queries, and the large model is doing routing and composition — not reasoning over raw documents. As decomposition traces accumulate (compound query in, formal+informal step mix out, correct answer), that dataset can train a smaller model to take over. The large model becomes a teacher; the boundary shifts down over time.
+
+**Validation order matters.** Bet 2 depends on Bet 1; Bet 3 depends on both. Validate in sequence: extraction fidelity first, query translation second, decomposition last. Bets 1 and 2 are tractable to measure with modest labeled data. Don't invest seriously in Bet 3 until both are solid.
+
 ## Stack dependencies
 
 | Component | Purpose | Port |
