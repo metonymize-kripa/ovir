@@ -14,3 +14,9 @@ kg-linkedin-research/gsr_training/eval_results_*.json
 __pycache__/
 *.py[cod]
 *$py.class
+
+# O*NET Falkor Playground Frontend Build Data
+onet-falkor-playground/frontend/node_modules/
+onet-falkor-playground/frontend/.next/
+onet-falkor-playground/frontend/out/
+onet-falkor-playground/frontend/build/
