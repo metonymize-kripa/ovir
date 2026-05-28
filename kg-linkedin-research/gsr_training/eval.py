@@ -146,6 +146,36 @@ def exact_match_score(predictions: list[list[str]], records: list[dict], relatio
 # Graph traversal hit rate
 # ---------------------------------------------------------------------------
 
+def _walk_chain(chain: list[str], start_entities: list[str], adj: dict) -> set:
+    """
+    Walk a relation chain from one or more start entities and return all reached nodes.
+
+    Two strategies are tried per start entity:
+      Sequential: start → r0 → ... → rN  (multi-hop path, e.g. company→job→skill)
+      Parallel:   start → r0, start → r1, ... simultaneously (fan-out, e.g. occ→{tech,knowledge,related})
+
+    The union of both strategies is returned so the caller doesn't need to know
+    which pattern applies to a given question type.
+    """
+    reached = set()
+    if not chain:
+        return reached
+
+    for start in start_entities:
+        # Sequential walk: treat chain as A→B→C path
+        frontier = [start]
+        for rel in chain:
+            frontier = [t for ent in frontier for r, t in adj.get(ent, []) if r == rel]
+            frontier = list(set(frontier))
+        reached.update(frontier)
+
+        # Parallel walk: each relation independently from start
+        for rel in chain:
+            reached.update(t for r, t in adj.get(start, []) if r == rel)
+
+    return reached
+
+
 def subgraph_hit(
     predictions: list[list[str]],
     records: list[dict],
@@ -153,9 +183,16 @@ def subgraph_hit(
     top_k: int = 3,
 ) -> dict:
     """
-    For each record, decode the top-k predicted chains, walk from the first
-    entity in subgraph_entities, and check if we reach any entity that appears
-    as a tail in the gold subgraph_triples.
+    For each record, decode the top-k predicted chains, walk from ALL entities
+    in subgraph_entities using both sequential and parallel strategies, then
+    check if any reached entity appears in the gold subgraph_triples.
+
+    Three question-type traversal patterns this handles correctly:
+      skill_gap      occ → has_skill (1-hop, trivially both strategies agree)
+      career_path    occ → {uses_technology, requires_knowledge, related_to_occupation}
+                     (parallel fan-out from occ node)
+      company_target company → posted_job → job → requires_skill → skill
+                     (sequential 2-hop; subgraph_entities includes the company nodes)
     """
     hits = []
     empty_preds = 0
@@ -165,32 +202,21 @@ def subgraph_hit(
         if not start_entities:
             hits.append(0)
             continue
-        start = start_entities[0]
 
-        # Gold target entities: tails of the subgraph triples
+        # Gold target entities: all entities appearing as tails in gold triples
         gold_tails = set(t for _, _, t in record.get("subgraph_triples", []))
 
         reached = set()
-        valid_chains = 0
         for pred in preds[:top_k]:
             chain = decode_chain(pred)
             if not chain:
                 continue
-            frontier = [start]
-            for rel in chain:
-                next_frontier = []
-                for ent in frontier:
-                    next_frontier += [t for r, t in adj.get(ent, []) if r == rel]
-                frontier = list(set(next_frontier))
-            if frontier:
-                reached.update(frontier)
-                valid_chains += 1
+            reached |= _walk_chain(chain, start_entities, adj)
 
         if not reached:
             empty_preds += 1
 
-        hit = int(bool(reached & gold_tails))
-        hits.append(hit)
+        hits.append(int(bool(reached & gold_tails)))
 
     return {
         "subgraph_hit_at_k": float(np.mean(hits)),
