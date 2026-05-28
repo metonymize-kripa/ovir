@@ -1,3 +1,16 @@
 **/.venv
 .venv/
 data/
+
+# GSR Training Intermediary Data
+kg-linkedin-research/gsr_training/data_splits/
+kg-linkedin-research/gsr_training/processed_data/
+kg-linkedin-research/gsr_training/trained_models/
+kg-linkedin-research/gsr_training/tokenizer/t5-linkedin-rel/
+kg-linkedin-research/gsr_training/predictions_*.json
+kg-linkedin-research/gsr_training/eval_results_*.json
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class

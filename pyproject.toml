@@ -19,6 +19,14 @@ dependencies = [
     "pysolr>=3.11.0",
     "redis>=5.0.0",
     "requests>=2.32.0",
+    "datasets>=2.14.0",
+    "transformers>=4.30.0",
+    "evaluate>=0.4.0",
+    "scikit-learn>=1.0.0",
+    "sentencepiece>=0.1.99",
+    "accelerate>=0.20.0",
+    "torch>=2.0.0",
+    "tqdm>=4.65.0",
 ]
 
 [build-system]

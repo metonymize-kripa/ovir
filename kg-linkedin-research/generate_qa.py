@@ -393,6 +393,7 @@ if __name__ == "__main__":
                         "subgraph_triples": item["subgraph_triples"],
                     }
                     out_f.write(json.dumps(record) + "\n")
+                    out_f.flush()
                     total += 1
                     if (i + 1) % 10 == 0:
                         print(f"  [{qtype}] {i+1}/{min(args.n, len(candidates))} — last: {question[:80]}")
