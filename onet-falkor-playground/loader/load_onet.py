@@ -87,6 +87,8 @@ def create_indexes():
         ("Knowledge", "element_id"),
         ("WorkActivity", "element_id"),
         ("Technology", "commodity_code"),
+        ("Task", "task_id"),
+        ("DWA", "dwa_id"),
     ]
     for label, prop in index_defs:
         try:
@@ -244,7 +246,7 @@ def load_competency(
 
 
 def load_technologies():
-    print("\n[6/7] Loading technologies ...")
+    print("\n[6/8] Loading technologies ...")
 
     tech_nodes: dict[str, dict] = {}
     edge_rows: list[dict] = []
@@ -299,7 +301,7 @@ def load_technologies():
 
 
 def load_related_occupations():
-    print("\n[7/7] Loading related occupations ...")
+    print("\n[7/8] Loading related occupations ...")
 
     rows = []
     for row in tsv("Related Occupations.txt"):
@@ -327,6 +329,133 @@ def load_related_occupations():
     print(f"  {len(rows)} related occupation edges.")
 
 
+def load_tasks():
+    print("\n[8/8] Loading Tasks and DWAs ...")
+
+    # 1. Load DWAs from DWA Reference.txt
+    dwas = {}
+    for row in tsv("DWA Reference.txt"):
+        dwa_id = row["DWA ID"].strip()
+        dwas[dwa_id] = {
+            "dwa_id": dwa_id,
+            "title": row["DWA Title"].strip(),
+            "element_id": row["Element ID"].strip(),
+        }
+
+    # Upsert DWA nodes
+    run_batch(
+        """
+        UNWIND $rows AS row
+        MERGE (d:DWA {dwa_id: row.dwa_id})
+        SET d.title = row.title
+        """,
+        list(dwas.values()),
+        desc="  DWA nodes",
+    )
+
+    # Relate DWA -> WorkActivity (element_id)
+    run_batch(
+        """
+        UNWIND $rows AS row
+        MATCH (d:DWA {dwa_id: row.dwa_id})
+        MATCH (w:WorkActivity {element_id: row.element_id})
+        MERGE (d)-[:PART_OF]->(w)
+        """,
+        list(dwas.values()),
+        desc="  DWA -> WorkActivity edges",
+    )
+
+    # 2. Load Task Statements.txt
+    tasks = {}
+    occ_task_edges = []
+    for row in tsv("Task Statements.txt"):
+        task_id = row["Task ID"].strip()
+        occ_code = row["O*NET-SOC Code"].strip()
+        statement = row["Task"].strip()
+        task_type = row.get("Task Type", "").strip()
+        
+        tasks[task_id] = {
+            "task_id": task_id,
+            "statement": statement,
+            "task_type": task_type
+        }
+        occ_task_edges.append({
+            "occ_code": occ_code,
+            "task_id": task_id,
+            "task_type": task_type,
+            "importance": None,
+            "relevance": None,
+        })
+
+    # Upsert Task nodes
+    run_batch(
+        """
+        UNWIND $rows AS row
+        MERGE (t:Task {task_id: row.task_id})
+        SET t.statement = row.statement, t.task_type = row.task_type
+        """,
+        list(tasks.values()),
+        desc="  Task nodes",
+    )
+
+    # Load ratings from Task Ratings.txt
+    ratings = defaultdict(dict)
+    for row in tsv("Task Ratings.txt"):
+        occ_code = row["O*NET-SOC Code"].strip()
+        task_id = row["Task ID"].strip()
+        scale = row["Scale ID"].strip()
+        try:
+            val = float(row["Data Value"])
+        except (ValueError, TypeError):
+            continue
+        ratings[(occ_code, task_id)][scale] = val
+
+    # Enrich edge items with ratings
+    for edge in occ_task_edges:
+        key = (edge["occ_code"], edge["task_id"])
+        if key in ratings:
+            edge["importance"] = ratings[key].get("IM")
+            edge["relevance"] = ratings[key].get("RT")
+
+    # Relate Occupation -> Task
+    run_batch(
+        """
+        UNWIND $rows AS row
+        MATCH (o:Occupation {code: row.occ_code})
+        MATCH (t:Task {task_id: row.task_id})
+        MERGE (o)-[r:PERFORMS]->(t)
+        SET r.task_type = row.task_type,
+            r.importance = row.importance,
+            r.relevance = row.relevance
+        """,
+        occ_task_edges,
+        desc="  Occupation -> Task edges",
+    )
+
+    # 3. Load Tasks to DWAs.txt
+    task_dwa_edges = []
+    for row in tsv("Tasks to DWAs.txt"):
+        task_id = row["Task ID"].strip()
+        dwa_id = row["DWA ID"].strip()
+        task_dwa_edges.append({
+            "task_id": task_id,
+            "dwa_id": dwa_id
+        })
+
+    # Relate Task -> DWA
+    run_batch(
+        """
+        UNWIND $rows AS row
+        MATCH (t:Task {task_id: row.task_id})
+        MATCH (d:DWA {dwa_id: row.dwa_id})
+        MERGE (t)-[:MAPS_TO]->(d)
+        """,
+        task_dwa_edges,
+        desc="  Task -> DWA edges",
+    )
+    print(f"  Tasks, DWAs and mappings loaded.")
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -337,20 +466,21 @@ def main():
 
     load_occupations()
 
-    load_competency("Abilities.txt",       "Ability",      "HAS_ABILITY",      2, 7)
-    load_competency("Skills.txt",          "Skill",        "HAS_SKILL",        3, 7)
-    load_competency("Knowledge.txt",       "Knowledge",    "HAS_KNOWLEDGE",    4, 7)
-    load_competency("Work Activities.txt", "WorkActivity", "HAS_WORK_ACTIVITY",5, 7)
+    load_competency("Abilities.txt",       "Ability",      "HAS_ABILITY",      2, 8)
+    load_competency("Skills.txt",          "Skill",        "HAS_SKILL",        3, 8)
+    load_competency("Knowledge.txt",       "Knowledge",    "HAS_KNOWLEDGE",    4, 8)
+    load_competency("Work Activities.txt", "WorkActivity", "HAS_WORK_ACTIVITY",5, 8)
 
     load_technologies()
     load_related_occupations()
+    load_tasks()
 
     elapsed = time.perf_counter() - t0
     print(f"\nDone in {elapsed:.1f}s")
 
     # Quick sanity check
     print("\n--- Sanity check ---")
-    for label in ["Occupation", "Skill", "Ability", "Knowledge", "WorkActivity", "Technology"]:
+    for label in ["Occupation", "Skill", "Ability", "Knowledge", "WorkActivity", "Technology", "Task", "DWA"]:
         result = g.query(f"MATCH (n:{label}) RETURN count(n) AS c")
         print(f"  {label}: {result.result_set[0][0]}")
 

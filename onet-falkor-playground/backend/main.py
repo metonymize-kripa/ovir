@@ -12,13 +12,40 @@ Run:
 """
 
 import os
+import re
+import math
+import csv
+import io
+import time
+from collections import Counter
 from typing import Optional
 
 import numpy as np
 from falkordb import FalkorDB
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+
+def text_cosine_similarity(desc1: str, desc2: str) -> float:
+    if not desc1 or not desc2:
+        return 0.0
+    words1 = re.findall(r'\w+', desc1.lower())
+    words2 = re.findall(r'\w+', desc2.lower())
+    
+    c1 = Counter(words1)
+    c2 = Counter(words2)
+    
+    all_words = set(c1.keys()) | set(c2.keys())
+    
+    dot_product = sum(c1.get(w, 0) * c2.get(w, 0) for w in all_words)
+    norm1 = math.sqrt(sum(val ** 2 for val in c1.values()))
+    norm2 = math.sqrt(sum(val ** 2 for val in c2.values()))
+    
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    
+    return float(dot_product / (norm1 * norm2))
 
 # ─── App setup ───────────────────────────────────────────────────────────────
 
@@ -86,11 +113,22 @@ class TransitionResult(BaseModel):
     source: Occupation
     target: Occupation
     similarity: float  # 0–1 cosine similarity over im×lv vectors
+    text_similarity: float # 0–1 description similarity
+    relatedness_tier: Optional[str] = None
     missing: list[CompetencyGap]      # in target, absent in source
     deficient: list[CompetencyGap]    # in both, target score > source + threshold
     transferable: list[CompetencyGap] # in both, close scores
     tech_gaps: list[TechGap]          # tech tools target uses, source doesn't
     summary: dict
+
+
+class JdRequest(BaseModel):
+    jd_text: str
+
+
+class AutomationRiskRequest(BaseModel):
+    occupation_code: str
+    active_task_ids: list[str]
 
 
 # ─── Graph helpers ───────────────────────────────────────────────────────────
@@ -389,6 +427,16 @@ async def get_occupation(code: str) -> dict:
     }
 
 
+def fetch_relatedness_tier(src_code: str, tgt_code: str) -> Optional[str]:
+    res = g.query(
+        "MATCH (a:Occupation {code: $src})-[r:RELATED_TO]->(b:Occupation {code: $tgt}) RETURN r.tier",
+        {"src": src_code, "tgt": tgt_code}
+    )
+    if res.result_set and len(res.result_set) > 0:
+        return res.result_set[0][0]
+    return None
+
+
 @app.post("/api/transition")
 async def transition(req: TransitionRequest) -> TransitionResult:
     source_occ = fetch_occupation(req.source_code)
@@ -403,6 +451,8 @@ async def transition(req: TransitionRequest) -> TransitionResult:
     target_profile = fetch_profile(req.target_code)
 
     sim = cosine_similarity(source_profile, target_profile)
+    text_sim = text_cosine_similarity(source_occ.description, target_occ.description)
+    tier = fetch_relatedness_tier(req.source_code, req.target_code)
     missing, deficient, transferable = compute_gap(source_profile, target_profile)
 
     # Technology gap: tools in target not in source
@@ -419,6 +469,8 @@ async def transition(req: TransitionRequest) -> TransitionResult:
         source=source_occ,
         target=target_occ,
         similarity=round(sim, 4),
+        text_similarity=round(text_sim, 4),
+        relatedness_tier=tier,
         missing=missing,
         deficient=deficient,
         transferable=transferable,
@@ -432,6 +484,301 @@ async def transition(req: TransitionRequest) -> TransitionResult:
             "target_competency_count": len(target_profile),
         },
     )
+
+
+# Automation vulnerability scores mapped to O*NET Work Activities
+AUTOMATION_VULNERABILITY = {
+    "4.A.1.a.1": 0.40,  # Getting Information
+    "4.A.1.a.2": 0.65,  # Monitoring Processes, Materials, or Surroundings
+    "4.A.1.b.1": 0.50,  # Identifying Objects, Actions, and Events
+    "4.A.2.a.1": 0.55,  # Estimating the Quantifiable Characteristics
+    "4.A.2.a.2": 0.60,  # Evaluating Information to Determine Compliance
+    "4.A.2.a.3": 0.50,  # Analyzing Data or Information
+    "4.A.2.a.4": 0.85,  # Processing Information
+    "4.A.2.b.1": 0.15,  # Thinking Creatively
+    "4.A.2.b.2": 0.30,  # Making Decisions and Solving Problems
+    "4.A.2.b.3": 0.45,  # Updating and Using Relevant Knowledge
+    "4.A.2.b.4": 0.20,  # Developing Objectives and Strategies
+    "4.A.2.b.5": 0.70,  # Scheduling Work and Activities
+    "4.A.2.b.6": 0.25,  # Organizing, Planning, and Prioritizing Work
+    "4.A.3.a.1": 0.80,  # Performing General Physical Activities
+    "4.A.3.a.2": 0.85,  # Handling and Moving Objects
+    "4.A.3.a.3": 0.75,  # Controlling Machines and Processes
+    "4.A.3.a.4": 0.85,  # Operating Vehicles, Mechanized Devices, or Equipment
+    "4.A.3.b.1": 0.35,  # Working with the Public
+    "4.A.3.b.2": 0.90,  # Documenting/Recording Information
+    "4.A.3.b.4": 0.40,  # Interpreting the Meaning of Information for Others
+    "4.A.3.b.5": 0.75,  # Coding/Translating Information
+    "4.A.3.b.6": 0.65,  # Drafting, Laying Out, and Specifying Technical Devices
+    "4.A.4.a.1": 0.30,  # Performing for or Working Directly with the Public
+    "4.A.4.a.2": 0.15,  # Establishing and Maintaining Interpersonal Relationships
+    "4.A.4.a.3": 0.20,  # Assisting and Caring for Others
+    "4.A.4.a.4": 0.25,  # Selling or Influencing Others
+    "4.A.4.a.5": 0.15,  # Resolving Conflicts and Negotiating with Others
+    "4.A.4.a.6": 0.80,  # Performing Administrative Activities
+    "4.A.4.a.7": 0.25,  # Staffing Organizational Units
+    "4.A.4.a.8": 0.60,  # Monitoring and Controlling Resources
+    "4.A.4.b.1": 0.15,  # Guiding, Directing, and Motivating Subordinates
+    "4.A.4.b.2": 0.15,  # Coaching and Developing Others
+    "4.A.4.b.3": 0.15,  # Providing Consultation and Advice to Others
+    "4.A.4.b.4": 0.20,  # Coordinating the Work and Activities of Others
+    "4.A.4.b.5": 0.10,  # Developing and Building Teams
+    "4.A.4.b.6": 0.15,  # Training and Teaching Others
+}
+
+
+@app.get("/api/occupation/{code}/closest")
+async def get_closest_occupations(code: str):
+    t_start = time.perf_counter()
+    src = fetch_occupation(code)
+    if not src:
+        raise HTTPException(status_code=404, detail=f"Occupation {code} not found")
+
+    # Check direct competencies count
+    check_res = g.query(
+        "MATCH (o:Occupation {code: $code})-[r]->() WHERE type(r) IN ['HAS_SKILL', 'HAS_ABILITY', 'HAS_KNOWLEDGE', 'HAS_WORK_ACTIVITY'] RETURN count(r)",
+        {"code": code}
+    )
+    has_comps = check_res.result_set[0][0] > 0 if check_res.result_set else False
+
+    if has_comps:
+        cypher = """
+            MATCH (src:Occupation {code: $code})-[r]->(c)
+            WHERE type(r) IN ['HAS_SKILL', 'HAS_ABILITY', 'HAS_KNOWLEDGE', 'HAS_WORK_ACTIVITY']
+            WITH src, sum(r.score * r.score) AS src_norm_sq
+
+            MATCH (src)-[r1]->(c)<-[r2]-(other:Occupation)
+            WHERE type(r1) IN ['HAS_SKILL', 'HAS_ABILITY', 'HAS_KNOWLEDGE', 'HAS_WORK_ACTIVITY']
+              AND type(r2) IN ['HAS_SKILL', 'HAS_ABILITY', 'HAS_KNOWLEDGE', 'HAS_WORK_ACTIVITY']
+              AND other.code <> $code
+            WITH src, src_norm_sq, other, sum(r1.score * r2.score) AS dot_product
+
+            MATCH (other)-[r3]->(c2)
+            WHERE type(r3) IN ['HAS_SKILL', 'HAS_ABILITY', 'HAS_KNOWLEDGE', 'HAS_WORK_ACTIVITY']
+            WITH other, dot_product, src_norm_sq, sum(r3.score * r3.score) AS other_norm_sq
+
+            WITH other, (dot_product / (sqrt(src_norm_sq) * sqrt(other_norm_sq))) AS similarity
+            RETURN other.code, other.title, similarity
+            ORDER BY similarity DESC
+            LIMIT 10
+        """
+        res = g.query(cypher, {"code": code})
+    else:
+        prefix = code[:7] if len(code) >= 7 else code
+        cypher = """
+            MATCH (s:Occupation)
+            WHERE s.code STARTS WITH $prefix AND s.code <> $code
+            MATCH (s)-[r1]->(c)
+            WHERE type(r1) IN ['HAS_SKILL', 'HAS_ABILITY', 'HAS_KNOWLEDGE', 'HAS_WORK_ACTIVITY']
+            WITH c, avg(r1.score) AS avg_src_score
+            WITH sum(avg_src_score * avg_src_score) AS src_norm_sq
+
+            MATCH (s:Occupation)
+            WHERE s.code STARTS WITH $prefix AND s.code <> $code
+            MATCH (s)-[r1]->(c)<-[r2]-(other:Occupation)
+            WHERE type(r1) IN ['HAS_SKILL', 'HAS_ABILITY', 'HAS_KNOWLEDGE', 'HAS_WORK_ACTIVITY']
+              AND type(r2) IN ['HAS_SKILL', 'HAS_ABILITY', 'HAS_KNOWLEDGE', 'HAS_WORK_ACTIVITY']
+              AND other.code <> $code
+            WITH src_norm_sq, other, c, avg(r1.score) AS avg_src_score, r2.score AS other_score
+            WITH src_norm_sq, other, sum(avg_src_score * other_score) AS dot_product
+
+            MATCH (other)-[r3]->(c2)
+            WHERE type(r3) IN ['HAS_SKILL', 'HAS_ABILITY', 'HAS_KNOWLEDGE', 'HAS_WORK_ACTIVITY']
+            WITH other, dot_product, src_norm_sq, sum(r3.score * r3.score) AS other_norm_sq
+
+            WITH other, (dot_product / (sqrt(src_norm_sq) * sqrt(other_norm_sq))) AS similarity
+            RETURN other.code, other.title, similarity
+            ORDER BY similarity DESC
+            LIMIT 10
+        """
+        res = g.query(cypher, {"prefix": prefix, "code": code})
+
+    elapsed_ms = (time.perf_counter() - t_start) * 1000
+
+    closest = []
+    for row in res.result_set:
+        closest.append({
+            "code": row[0],
+            "title": row[1],
+            "similarity": round(float(row[2]), 4) if row[2] is not None else 0.0
+        })
+
+    return {
+        "source": src.model_dump(),
+        "closest": closest,
+        "execution_time_ms": round(elapsed_ms, 2),
+        "cypher_query": cypher.strip()
+    }
+
+
+@app.get("/api/transition/{src}/{tgt}/export")
+async def export_transition_gap(src: str, tgt: str):
+    source_occ = fetch_occupation(src)
+    target_occ = fetch_occupation(tgt)
+
+    if not source_occ or not target_occ:
+        raise HTTPException(status_code=404, detail="Source or target occupation not found")
+
+    source_profile = fetch_profile(src)
+    target_profile = fetch_profile(tgt)
+
+    missing, deficient, transferable = compute_gap(source_profile, target_profile)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    writer.writerow([f"# Source: {source_occ.title} ({source_occ.code})"])
+    writer.writerow([f"# Target: {target_occ.title} ({target_occ.code})"])
+    writer.writerow([])
+    writer.writerow(["competency_id", "competency_name", "competency_type", "source_score", "target_score", "delta", "classification"])
+
+    for x in missing:
+        writer.writerow([
+            x.element_id,
+            x.name,
+            x.type,
+            "",
+            round(x.target_score, 1),
+            round(x.delta, 1),
+            "Missing"
+        ])
+
+    for x in deficient:
+        writer.writerow([
+            x.element_id,
+            x.name,
+            x.type,
+            round(x.source_score, 1) if x.source_score is not None else "",
+            round(x.target_score, 1),
+            round(x.delta, 1),
+            "Deficient"
+        ])
+
+    for x in transferable:
+        writer.writerow([
+            x.element_id,
+            x.name,
+            x.type,
+            round(x.source_score, 1) if x.source_score is not None else "",
+            round(x.target_score, 1),
+            round(x.delta, 1),
+            "Transferable"
+        ])
+
+    output.seek(0)
+    filename = f"transition_gap_{src}_to_{tgt}.csv"
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode("utf-8")),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+@app.get("/api/occupation/{code}/tasks")
+async def get_occupation_tasks(code: str):
+    res = g.query(
+        """
+        MATCH (o:Occupation {code: $code})-[r:PERFORMS]->(t:Task)
+        OPTIONAL MATCH (t)-[:MAPS_TO]->(d:DWA)-[:PART_OF]->(wa:WorkActivity)
+        RETURN t.task_id, t.statement, t.task_type, r.importance, r.relevance, 
+               collect(DISTINCT {element_id: wa.element_id, name: wa.name}) AS activities
+        """,
+        {"code": code}
+    )
+    
+    tasks_list = []
+    for row in res.result_set:
+        task_id, statement, task_type, imp, rel, activities = row
+        
+        wa_list = []
+        for act in activities:
+            if act and act.get("element_id"):
+                wa_list.append(act)
+                
+        wa_scores = [AUTOMATION_VULNERABILITY.get(wa["element_id"], 0.5) for wa in wa_list]
+        task_risk = sum(wa_scores) / len(wa_scores) if wa_scores else 0.5
+        
+        tasks_list.append({
+            "task_id": task_id,
+            "statement": statement,
+            "task_type": task_type or "Core",
+            "importance": float(imp) if imp is not None else 3.0,
+            "relevance": float(rel) if rel is not None else 50.0,
+            "work_activities": wa_list,
+            "automation_risk": round(task_risk, 4)
+        })
+        
+    tasks_list.sort(key=lambda x: (x["task_type"] == "Core", x["importance"] * x["relevance"]), reverse=True)
+    return tasks_list
+
+
+@app.post("/api/automation-risk")
+async def calculate_automation_risk(req: AutomationRiskRequest):
+    tasks = await get_occupation_tasks(req.occupation_code)
+    if not tasks:
+        raise HTTPException(status_code=404, detail="No tasks found for occupation")
+        
+    active_set = set(req.active_task_ids)
+    
+    total_weight_all = 0.0
+    weighted_risk_all = 0.0
+    
+    total_weight_active = 0.0
+    weighted_risk_active = 0.0
+    
+    for t in tasks:
+        w = t["importance"] * t["relevance"]
+        r = t["automation_risk"]
+        
+        total_weight_all += w
+        weighted_risk_all += r * w
+        
+        if t["task_id"] in active_set:
+            total_weight_active += w
+            weighted_risk_active += r * w
+            
+    baseline_risk = (weighted_risk_all / total_weight_all) if total_weight_all > 0 else 0.5
+    personalized_risk = (weighted_risk_active / total_weight_active) if total_weight_active > 0 else baseline_risk
+    
+    return {
+        "baseline_risk": round(baseline_risk, 4),
+        "personalized_risk": round(personalized_risk, 4),
+        "active_count": len(active_set),
+        "total_count": len(tasks)
+    }
+
+
+@app.post("/api/match-jd")
+async def match_jd(req: JdRequest):
+    words = [w.lower().strip() for w in re.findall(r'\w+', req.jd_text) if len(w) >= 4]
+    stopwords = {'with', 'that', 'this', 'from', 'their', 'they', 'have', 'were', 'about', 'would', 'could'}
+    keywords = [w for w in words if w not in stopwords]
+    
+    if not keywords:
+        return []
+        
+    keywords = keywords[:10]
+    
+    cypher = """
+        UNWIND $keywords AS kw
+        MATCH (o:Occupation)-[:PERFORMS]->(t:Task)
+        WHERE toLower(t.statement) CONTAINS kw
+        RETURN o.code, o.title, count(t) AS match_count, collect(t.statement)[0..3] AS sample_tasks
+        ORDER BY match_count DESC
+        LIMIT 10
+    """
+    res = g.query(cypher, {"keywords": keywords})
+    
+    results = []
+    for row in res.result_set:
+        results.append({
+            "code": row[0],
+            "title": row[1],
+            "match_count": int(row[2]),
+            "sample_tasks": row[3]
+        })
+        
+    return results
 
 
 @app.get("/health")
