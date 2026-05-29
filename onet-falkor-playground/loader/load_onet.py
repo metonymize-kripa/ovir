@@ -398,24 +398,33 @@ def load_tasks():
         desc="  Task nodes",
     )
 
-    # Load ratings from Task Ratings.txt
-    ratings = defaultdict(dict)
+    # Load ratings from Task Ratings.txt.
+    # Task Ratings uses Scale ID = "FT" (Frequency/Time allocation) with a Category
+    # column (1–7) and a Data Value (% of time). We compute a weighted frequency
+    # score as sum(category * data_value) — higher = task takes more of the workday.
+    # Note: O*NET Task Ratings do not carry IM/LV scales; those are competency-level
+    # constructs. Don't look for "IM" or "RT" here.
+    ratings: dict[tuple, float] = {}
+    ft_accumulator: dict[tuple, float] = defaultdict(float)
     for row in tsv("Task Ratings.txt"):
+        if row.get("Scale ID", "").strip() != "FT":
+            continue
         occ_code = row["O*NET-SOC Code"].strip()
         task_id = row["Task ID"].strip()
-        scale = row["Scale ID"].strip()
         try:
-            val = float(row["Data Value"])
+            category = float(row["Category"])
+            data_value = float(row["Data Value"])
         except (ValueError, TypeError):
             continue
-        ratings[(occ_code, task_id)][scale] = val
+        ft_accumulator[(occ_code, task_id)] += category * data_value
 
-    # Enrich edge items with ratings
+    ratings = dict(ft_accumulator)
+
+    # Enrich edge items with frequency score
     for edge in occ_task_edges:
         key = (edge["occ_code"], edge["task_id"])
-        if key in ratings:
-            edge["importance"] = ratings[key].get("IM")
-            edge["relevance"] = ratings[key].get("RT")
+        edge["importance"] = round(ratings[key], 4) if key in ratings else None
+        edge["relevance"] = None  # not provided in O*NET task ratings
 
     # Relate Occupation -> Task
     run_batch(

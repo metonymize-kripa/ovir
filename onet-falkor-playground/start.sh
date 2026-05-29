@@ -47,10 +47,17 @@ LOADER_DIR="$HERE/loader"
 GRAPH_POPULATED=false
 
 if [ "$FRESH" != "--fresh" ]; then
-  # Check if graph already has occupations loaded
-  OCC_COUNT=$(docker compose -f "$REPO_ROOT/docker-compose.yml" exec -T falkordb \
-    redis-cli GRAPH.QUERY onet "MATCH (o:Occupation) RETURN count(o)" 2>/dev/null \
-    | grep -E '^[0-9]+$' | head -1 || echo "0")
+  # Check if graph already has occupations loaded via the falkordb Python client
+  # (redis-cli GRAPH.QUERY output format is not reliably parseable as a plain integer)
+  OCC_COUNT=$(cd "$LOADER_DIR" && uv run python -c "
+from falkordb import FalkorDB
+try:
+    g = FalkorDB(host='127.0.0.1', port=6379).select_graph('onet')
+    r = g.query('MATCH (o:Occupation) RETURN count(o)')
+    print(r.result_set[0][0])
+except Exception:
+    print(0)
+" 2>/dev/null || echo "0")
   if [ "${OCC_COUNT:-0}" -gt 100 ] 2>/dev/null; then
     success "Graph already populated ($OCC_COUNT occupations). Skipping loader. Pass --fresh to reload."
     GRAPH_POPULATED=true

@@ -54,6 +54,9 @@ export default function OccupationSearch({ label, value, onChange, disabled }: P
         setLoading(false);
       }
     }, 250);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [query]);
 
   function select(occ: OccupationOption) {
