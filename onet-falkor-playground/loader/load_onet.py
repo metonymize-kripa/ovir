@@ -32,7 +32,7 @@ from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description="Load O*NET into FalkorDB")
 parser.add_argument("--data-dir", default="../../data/db_30_0_text", type=Path)
-parser.add_argument("--host", default="localhost")
+parser.add_argument("--host", default="127.0.0.1")
 parser.add_argument("--port", default=6379, type=int)
 parser.add_argument("--fresh", action="store_true", help="Drop and recreate the graph")
 parser.add_argument("--graph", default="onet", help="Graph name in FalkorDB")
@@ -251,7 +251,7 @@ def load_technologies():
 
     for row in tsv("Technology Skills.txt"):
         code = row["O*NET-SOC Code"].strip()
-        commodity = row.get("Example Commodity Code", "").strip()
+        commodity = (row.get("Commodity Code") or row.get("Example Commodity Code") or "").strip()
         title = row.get("Commodity Title", "").strip()
         hot = row.get("Hot Technology", "N").strip().upper() == "Y"
         demand = row.get("In Demand", "N").strip().upper() == "Y"

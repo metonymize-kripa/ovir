@@ -68,7 +68,7 @@ fi
 # ─── 3. Backend ───────────────────────────────────────────────────────────────
 BACKEND_DIR="$HERE/backend"
 info "Starting FastAPI backend on :8000..."
-(cd "$BACKEND_DIR" && uv run uvicorn main:app --port 8000 --log-level warning) &
+(cd "$BACKEND_DIR" && uv run uvicorn main:app --port 8000 --reload --log-level warning) &
 BACKEND_PID=$!
 
 # Wait for backend to accept connections

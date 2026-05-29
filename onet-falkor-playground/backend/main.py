@@ -31,7 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-FALKOR_HOST = os.getenv("FALKORDB_HOST", "localhost")
+FALKOR_HOST = os.getenv("FALKORDB_HOST", "127.0.0.1")
 FALKOR_PORT = int(os.getenv("FALKORDB_PORT", "6379"))
 GRAPH_NAME = os.getenv("ONET_GRAPH", "onet")
 
@@ -149,6 +149,46 @@ def fetch_profile(code: str) -> list[CompetencyItem]:
                     score=float(score) if score is not None else float(im) * float(lv),
                 )
             )
+
+    # Fallback to sister occupations if no competencies found
+    if not items and len(code) >= 7:
+        prefix = code[:7]
+        # Count total sister occupations under this prefix
+        sisters_count_res = g.query(
+            "MATCH (o:Occupation) WHERE o.code STARTS WITH $prefix AND o.code <> $code RETURN count(o)",
+            {"prefix": prefix, "code": code}
+        )
+        total_sisters = sisters_count_res.result_set[0][0] if sisters_count_res.result_set else 1
+        if total_sisters == 0:
+            total_sisters = 1
+
+        fallback_query = """
+            MATCH (o:Occupation)-[r]->(n)
+            WHERE o.code STARTS WITH $prefix AND o.code <> $code AND type(r) IN ['HAS_SKILL', 'HAS_ABILITY', 'HAS_KNOWLEDGE', 'HAS_WORK_ACTIVITY']
+            RETURN labels(n)[0] AS type, n.element_id, n.name, sum(r.im), sum(r.lv), sum(r.score)
+        """
+        res = g.query(fallback_query, {"prefix": prefix, "code": code})
+        for row in res.result_set:
+            comp_type, eid, name, sum_im, sum_lv, sum_score = row
+            if sum_im is None or sum_lv is None:
+                continue
+
+            # Zero-filled average over all sister occupations under this prefix
+            avg_im = float(sum_im) / total_sisters
+            avg_lv = float(sum_lv) / total_sisters
+            avg_score = float(sum_score) / total_sisters
+
+            items.append(
+                CompetencyItem(
+                    element_id=eid,
+                    name=name,
+                    type=comp_type,
+                    im=round(avg_im, 4),
+                    lv=round(avg_lv, 4),
+                    score=round(avg_score, 4),
+                )
+            )
+
     return items
 
 
@@ -170,6 +210,27 @@ def fetch_tech(code: str) -> dict[str, TechGap]:
             hot_tech=bool(hot),
             in_demand=bool(demand),
         )
+
+    # Fallback to sister occupations if no tech tools found
+    if not out and len(code) >= 7:
+        prefix = code[:7]
+        res_fallback = g.query(
+            """
+            MATCH (o:Occupation)-[r:USES_TECH]->(t:Technology)
+            WHERE o.code STARTS WITH $prefix AND o.code <> $code
+            RETURN t.commodity_code, t.title, max(toInteger(r.hot_tech)), max(toInteger(r.in_demand))
+            """,
+            {"prefix": prefix, "code": code},
+        )
+        for row in res_fallback.result_set:
+            cc, title, hot, demand = row
+            out[cc] = TechGap(
+                commodity_code=cc,
+                title=title or "",
+                hot_tech=bool(hot),
+                in_demand=bool(demand),
+            )
+
     return out
 
 
@@ -215,6 +276,24 @@ def compute_gap(
     for item in target_items:
         key = (item.type, item.element_id)
         src = source_map.get(key)
+
+        # Competency is a negligible requirement in target role - automatically transferable
+        if item.score < 8.0:
+            transferable.append(
+                CompetencyGap(
+                    element_id=item.element_id,
+                    name=item.name,
+                    type=item.type,
+                    target_im=item.im,
+                    target_lv=item.lv,
+                    target_score=item.score,
+                    source_im=src.im if src else None,
+                    source_lv=src.lv if src else None,
+                    source_score=src.score if src else None,
+                    delta=round(item.score - src.score, 4) if src else item.score,
+                )
+            )
+            continue
 
         if src is None:
             missing.append(
